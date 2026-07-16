@@ -1,10 +1,22 @@
-export type VerificationLevel = 1 | 2 | 3 | 4
+import type {
+  CancellationPolicy,
+  Host,
+  HostBadge,
+  Property,
+  PropertyType,
+  Review,
+  ReviewBreakdown,
+  SearchParams,
+  VerificationLevel,
+} from "@/types"
 
-export type Property = {
+export type { SearchParams }
+
+type BaseProperty = {
   id: string
   slug: string
   title: string
-  propertyType: "Homestay" | "Villa" | "Farm Stay" | "Heritage Home"
+  propertyType: PropertyType
   city: string
   region: string
   guests: number
@@ -14,19 +26,12 @@ export type Property = {
   reviewCount: number
   verificationLevel: VerificationLevel
   hostName: string
-  hostBadge: "Top Rated Host" | "Super Responsive Host" | null
+  hostBadge: HostBadge
   image?: string
   featured?: boolean
 }
 
-export const verificationLabel: Record<VerificationLevel, string> = {
-  1: "Identity Verified",
-  2: "Property Verified",
-  3: "Video Verified",
-  4: "On-Site Verified",
-}
-
-const properties: Property[] = [
+const baseProperties: BaseProperty[] = [
   {
     id: "p1",
     slug: "aravali-ridge-studio-gurugram",
@@ -287,6 +292,80 @@ const properties: Property[] = [
   },
 ]
 
+const DEFAULT_AMENITIES = [
+  "Wi-Fi",
+  "Air conditioning",
+  "Kitchen",
+  "Free parking",
+  "Washing machine",
+  "TV",
+]
+
+const DEFAULT_HOUSE_RULES = [
+  "Check-in after 1:00 PM, check-out before 11:00 AM",
+  "No smoking indoors",
+  "No parties or events",
+  "Pets on request only",
+]
+
+const CANCELLATION_POLICIES: CancellationPolicy[] = ["Flexible", "Moderate", "Firm"]
+
+// ponytail: amenities/house rules/reviews are generated, not hand-authored —
+// this is mock data standing in for the external backend (ARCHITECTURE.md).
+// Swap for real per-property data once that backend exists.
+function buildReviewBreakdown(rating: number): ReviewBreakdown {
+  const base = Math.max(1, Math.min(5, rating))
+  return {
+    cleanliness: base,
+    accuracy: Math.max(1, base - 0.1),
+    checkIn: Math.max(1, base - 0.2),
+    communication: base,
+    location: Math.max(1, base - 0.1),
+    value: Math.max(1, base - 0.2),
+  }
+}
+
+const SAMPLE_REVIEW_AUTHORS = ["Ananya", "Rahul", "Sneha", "Vikas", "Pooja"]
+
+function buildReviews(hostName: string, reviewCount: number): Review[] {
+  const sampleCount = Math.min(3, Math.max(1, reviewCount))
+  return Array.from({ length: sampleCount }, (_, i) => ({
+    id: `r${i + 1}`,
+    author: SAMPLE_REVIEW_AUTHORS[i % SAMPLE_REVIEW_AUTHORS.length],
+    date: `2026-05-1${i}`,
+    rating: 5,
+    text: `${hostName} was a fantastic host — the stay matched the listing exactly and check-in was smooth.`,
+    ...(i === 0 ? { hostReply: "Thank you so much for staying with us!" } : {}),
+  }))
+}
+
+function buildHost(name: string, badge: HostBadge, index: number): Host {
+  return {
+    name,
+    responseRate: badge === "Super Responsive Host" ? 98 : 85,
+    avgResponseTimeMinutes: badge === "Super Responsive Host" ? 15 : 90,
+    badge,
+    otherListingsCount: index % 4,
+  }
+}
+
+function enrich(base: BaseProperty, index: number): Property {
+  return {
+    ...base,
+    images: base.image ? [base.image] : [],
+    description: `${base.title} is a ${base.propertyType.toLowerCase()} in ${base.city}, ${base.region}, comfortably hosting up to ${base.guests} guests across ${base.beds} bed${base.beds > 1 ? "s" : ""}.`,
+    amenities: DEFAULT_AMENITIES,
+    houseRules: DEFAULT_HOUSE_RULES,
+    cancellationPolicy: CANCELLATION_POLICIES[index % CANCELLATION_POLICIES.length],
+    whatsappNumber: `+91 9${String(800000000 + index * 137).padStart(9, "0")}`,
+    reviewBreakdown: buildReviewBreakdown(base.rating),
+    reviews: buildReviews(base.hostName, base.reviewCount),
+    host: buildHost(base.hostName, base.hostBadge, index),
+  }
+}
+
+const properties: Property[] = baseProperties.map(enrich)
+
 export function propertiesByRegion(region: string): Property[] {
   return properties.filter((property) => property.region === region)
 }
@@ -295,6 +374,41 @@ export const featuredProperties: Property[] = properties.filter((property) => pr
 
 export function propertiesByCity(city: string): Property[] {
   return properties.filter((property) => property.city === city)
+}
+
+export function propertyById(id: string): Property | undefined {
+  return properties.find((property) => property.id === id)
+}
+
+export function searchProperties(params: SearchParams): Property[] {
+  let results = properties.filter((property) => {
+    if (params.city && property.city !== params.city && property.region !== params.city) return false
+    if (params.type && property.propertyType !== params.type) return false
+    if (params.guests && property.guests < params.guests) return false
+    if (params.priceMin != null && property.pricePerNight < params.priceMin) return false
+    if (params.priceMax != null && property.pricePerNight > params.priceMax) return false
+    if (params.verification && property.verificationLevel < params.verification) return false
+    return true
+  })
+
+  switch (params.sort) {
+    case "price-asc":
+      results = [...results].sort((a, b) => a.pricePerNight - b.pricePerNight)
+      break
+    case "price-desc":
+      results = [...results].sort((a, b) => b.pricePerNight - a.pricePerNight)
+      break
+    case "rating":
+      results = [...results].sort((a, b) => b.rating - a.rating)
+      break
+    case "verified":
+      results = [...results].sort((a, b) => b.verificationLevel - a.verificationLevel)
+      break
+    default:
+      break
+  }
+
+  return results
 }
 
 export const searchCities = [
