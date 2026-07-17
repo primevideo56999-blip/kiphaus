@@ -4,6 +4,8 @@ import { HostShell } from "@/components/features/host/host-shell"
 import { PropertyRow } from "@/components/features/host/property-row"
 import { Button } from "@/components/ui/button"
 import { hostListings, hostSubscription } from "@/lib/mock-data"
+import { FadeIn } from "@/components/motion/fade-in"
+import { StaggerList, StaggerItem } from "@/components/motion/stagger-list"
 
 export default function HostPropertiesPage() {
   const canAddListing = hostSubscription.plan === "premium" || hostListings.length === 0
@@ -30,7 +32,7 @@ export default function HostPropertiesPage() {
 
       <div className="mt-8">
         {hostListings.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border px-6 py-20 text-center">
+          <FadeIn inView={false} className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border px-6 py-20 text-center">
             <p className="max-w-sm text-body text-ink-black leading-body tracking-body">
               You haven&rsquo;t listed a property yet. Add your first one to start getting verified.
             </p>
@@ -41,13 +43,13 @@ export default function HostPropertiesPage() {
             >
               Add your first property
             </Button>
-          </div>
+          </FadeIn>
         ) : (
-          <div className="space-y-4">
+          <StaggerList inView={false} className="space-y-4">
             {hostListings.map((listing) => (
-              <PropertyRow key={listing.property.id} listing={listing} />
+              <StaggerItem key={listing.property.id}><PropertyRow listing={listing} /></StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         )}
       </div>
     </HostShell>
