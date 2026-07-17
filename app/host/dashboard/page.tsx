@@ -5,6 +5,7 @@ import { StatCard } from "@/components/features/host/stat-card"
 import { InquiryRow } from "@/components/features/host/inquiry-row"
 import { PropertyRow } from "@/components/features/host/property-row"
 import { VerificationTracker } from "@/components/features/host/verification-tracker"
+import { StaggerList, StaggerItem } from "@/components/motion/stagger-list"
 import { currentHost, hostInquiries, hostListings, hostSubscription, hostVerificationSteps } from "@/lib/mock-data"
 
 export default function HostDashboardPage() {
@@ -25,12 +26,12 @@ export default function HostDashboardPage() {
         Here&rsquo;s how your {hostListings.length} {hostListings.length === 1 ? "listing" : "listings"} are doing.
       </p>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard icon={Eye} label="Listing views" value={totalViews.toLocaleString("en-IN")} />
-        <StatCard icon={MessageSquare} label="Inquiries" value={String(totalInquiries)} />
-        <StatCard icon={CalendarCheck} label="Bookings" value={String(totalBookings)} />
-        <StatCard icon={IndianRupee} label="Est. earnings" value={`₹${estimatedEarnings.toLocaleString("en-IN")}`} hint="Kiphaus doesn't process stay payments" />
-      </div>
+      <StaggerList inView={false} className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StaggerItem><StatCard icon={Eye} label="Listing views" value={totalViews.toLocaleString("en-IN")} /></StaggerItem>
+        <StaggerItem><StatCard icon={MessageSquare} label="Inquiries" value={String(totalInquiries)} /></StaggerItem>
+        <StaggerItem><StatCard icon={CalendarCheck} label="Bookings" value={String(totalBookings)} /></StaggerItem>
+        <StaggerItem><StatCard icon={IndianRupee} label="Est. earnings" value={`₹${estimatedEarnings.toLocaleString("en-IN")}`} hint="Kiphaus doesn't process stay payments" /></StaggerItem>
+      </StaggerList>
 
       <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-10">
@@ -40,11 +41,11 @@ export default function HostDashboardPage() {
                 Recent inquiries
               </h2>
             </div>
-            <div className="space-y-3">
+            <StaggerList className="space-y-3">
               {hostInquiries.map((inquiry) => (
-                <InquiryRow key={inquiry.id} inquiry={inquiry} />
+                <StaggerItem key={inquiry.id}><InquiryRow inquiry={inquiry} /></StaggerItem>
               ))}
-            </div>
+            </StaggerList>
           </section>
 
           <section aria-labelledby="your-properties">
@@ -56,11 +57,11 @@ export default function HostDashboardPage() {
                 See all
               </Link>
             </div>
-            <div className="space-y-3">
+            <StaggerList className="space-y-3">
               {hostListings.slice(0, 2).map((listing) => (
-                <PropertyRow key={listing.property.id} listing={listing} />
+                <StaggerItem key={listing.property.id}><PropertyRow listing={listing} /></StaggerItem>
               ))}
-            </div>
+            </StaggerList>
           </section>
         </div>
 
