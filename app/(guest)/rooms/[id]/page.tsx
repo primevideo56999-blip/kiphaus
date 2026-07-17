@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/layout/site-footer"
 import { PropertyGallery } from "@/components/features/guest/property-gallery"
 import { WhatsAppGateModal } from "@/components/features/guest/whatsapp-gate-modal"
 import { PropertyCard } from "@/components/features/guest/property-card"
+import { BookingCalendar } from "@/components/features/guest/booking-calendar"
 import { Button } from "@/components/ui/button"
 import { propertiesByCity, propertyById } from "@/lib/mock-data"
 import { Separator } from "@/components/ui/separator"
@@ -125,14 +126,8 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
             <Separator />
             
-            {/* Calendar Placeholder */}
-            <div>
-               <h2 className="text-[22px] font-semibold text-ink-black mb-1">7 nights in {property.city}</h2>
-               <p className="text-sm text-muted-foreground mb-6">Select dates for exact pricing</p>
-               <div className="h-[300px] bg-muted/30 rounded-xl border border-border flex items-center justify-center text-muted-foreground">
-                  Calendar Widget Placeholder
-               </div>
-            </div>
+            {/* Calendar */}
+            <BookingCalendar city={property.city} pricePerNight={property.pricePerNight} />
 
           </div>
 
