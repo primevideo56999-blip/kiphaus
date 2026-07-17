@@ -47,6 +47,8 @@ export type Property = {
   propertyType: PropertyType
   city: string
   region: string
+  lat: number
+  lng: number
   guests: number
   beds: number
   pricePerNight: number
