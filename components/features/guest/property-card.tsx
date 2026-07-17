@@ -5,10 +5,11 @@ import type { Property } from "@/types"
 import { TrustBadgeRow } from "./trust-badge-row"
 import { WhatsAppGateModal } from "./whatsapp-gate-modal"
 import { Button } from "@/components/ui/button"
+import { HoverLift } from "@/components/motion/hover-lift"
 
 export function PropertyCard({ property }: { property: Property }) {
   return (
-    <div className="group relative flex flex-col gap-3">
+    <HoverLift className="group relative flex flex-col gap-3">
       <div className="relative">
         <Link
           href={`/rooms/${property.id}`}
@@ -73,6 +74,6 @@ export function PropertyCard({ property }: { property: Property }) {
           <span className="text-sm text-foreground">night</span>
         </div>
       </div>
-    </div>
+    </HoverLift>
   )
 }
