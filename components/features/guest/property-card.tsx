@@ -8,9 +8,14 @@ import { Button } from "@/components/ui/button"
 
 export function PropertyCard({ property }: { property: Property }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-glow)]">
-      <Link href={`/rooms/${property.id}`} className="block">
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+    <div className="group relative flex flex-col gap-3">
+      <div className="relative">
+        <Link
+          href={`/rooms/${property.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block relative aspect-square w-full overflow-hidden rounded-xl bg-muted"
+        >
           {property.images[0] ? (
             <Image
               src={property.images[0]}
@@ -24,37 +29,48 @@ export function PropertyCard({ property }: { property: Property }) {
               No photo yet
             </div>
           )}
-        </div>
-      </Link>
-      <WhatsAppGateModal
-        variant="save"
-        triggerRender={
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Save ${property.title} to wishlist`}
-            className="absolute right-3 top-3 rounded-full bg-card/80 text-foreground backdrop-blur hover:bg-card hover:text-primary"
-          />
-        }
-      >
-        <Heart className="size-4" />
-      </WhatsAppGateModal>
-      <div className="space-y-2 p-4">
-        <Link href={`/rooms/${property.id}`}>
-          <h3 className="line-clamp-2 text-sm font-medium text-foreground">{property.title}</h3>
         </Link>
-        <p className="text-sm text-muted-foreground">
+        
+        {/* Guest favourite badge (mocked for high rating properties) */}
+        {property.rating >= 4.9 && (
+          <div className="absolute left-3 top-3 rounded-full bg-background/95 px-2 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur">
+            Guest favourite
+          </div>
+        )}
+
+        <WhatsAppGateModal
+          variant="save"
+          triggerRender={
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={`Save ${property.title} to wishlist`}
+              className="absolute right-3 top-3 h-8 w-8 rounded-full bg-transparent hover:scale-110 transition-transform hover:bg-transparent"
+            />
+          }
+        >
+          <Heart className="size-6 text-white drop-shadow-md stroke-[1.5]" style={{ fill: 'rgba(0,0,0,0.3)' }} />
+        </WhatsAppGateModal>
+      </div>
+
+      <div className="flex flex-col">
+        <div className="flex items-start justify-between gap-2">
+          <Link href={`/rooms/${property.id}`} target="_blank" rel="noopener noreferrer" className="block truncate">
+            <h3 className="truncate text-base font-semibold text-foreground">{property.title}</h3>
+          </Link>
+          <div className="flex shrink-0 items-center gap-1 text-sm text-foreground">
+            <span aria-hidden="true">★</span>
+            <span>{property.rating.toFixed(2)}</span>
+          </div>
+        </div>
+        <p className="truncate text-sm text-muted-foreground">
           {property.city}, {property.region}
         </p>
-        <TrustBadgeRow verificationLevel={property.verificationLevel} hostBadge={property.hostBadge} />
-        <div className="flex items-baseline justify-between pt-1">
+        <div className="mt-1 flex items-baseline gap-1">
           <span className="font-semibold text-foreground">
-            ₹{property.pricePerNight.toLocaleString("en-IN")}{" "}
-            <span className="text-sm font-normal text-muted-foreground">/ night</span>
+            ₹{property.pricePerNight.toLocaleString("en-IN")}
           </span>
-          <span className="text-sm text-muted-foreground">
-            ★ {property.rating.toFixed(1)} ({property.reviewCount})
-          </span>
+          <span className="text-sm text-foreground">night</span>
         </div>
       </div>
     </div>

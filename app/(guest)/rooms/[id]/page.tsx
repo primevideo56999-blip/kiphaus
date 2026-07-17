@@ -1,16 +1,14 @@
 import { notFound } from "next/navigation"
-import { Heart, MessageCircle } from "lucide-react"
+import { Heart, Share, Star, Medal, MapPin, ChevronRight, Calendar as CalendarIcon } from "lucide-react"
 import { SiteHeader } from "@/components/layout/site-header"
 import { SiteFooter } from "@/components/layout/site-footer"
 import { PropertyGallery } from "@/components/features/guest/property-gallery"
-import { TrustBadgeRow } from "@/components/features/guest/trust-badge-row"
-import { HostCard } from "@/components/features/guest/host-card"
-import { ReviewSummary } from "@/components/features/guest/review-summary"
-import { ReviewCard } from "@/components/features/guest/review-card"
 import { WhatsAppGateModal } from "@/components/features/guest/whatsapp-gate-modal"
 import { PropertyCard } from "@/components/features/guest/property-card"
 import { Button } from "@/components/ui/button"
 import { propertiesByCity, propertyById } from "@/lib/mock-data"
+import { Separator } from "@/components/ui/separator"
+import { HostCard } from "@/components/features/guest/host-card"
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,102 +17,279 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
   const similar = propertiesByCity(property.city)
     .filter((candidate) => candidate.id !== property.id)
-    .slice(0, 3)
+    .slice(0, 4)
 
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-5xl px-4 pt-28 pb-20">
-        <h1 className="font-perfectly-nineties-regular text-3xl">{property.title}</h1>
-        <p className="mt-1 text-muted-foreground">
-          {property.city}, {property.region}
-        </p>
-
-        <div className="mt-6">
-          <PropertyGallery images={property.images} title={property.title} />
+      <main className="mx-auto max-w-[1120px] px-4 sm:px-6 lg:px-8 pt-6 pb-20">
+        
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-[26px] font-semibold text-ink-black">{property.title}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-black">
+              <span className="flex items-center gap-1 font-semibold">
+                <Star className="size-4 fill-current" />
+                {property.rating}
+              </span>
+              <span className="underline font-semibold">{property.reviewCount} reviews</span>
+              <span>·</span>
+              <span className="flex items-center gap-1">
+                {property.hostBadge && <><Medal className="size-4 text-muted-foreground" /> <span className="text-muted-foreground">{property.hostBadge}</span> <span>·</span></>}
+              </span>
+              <span className="underline font-semibold">{property.city}, {property.region}, India</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-sm font-semibold underline">
+            <button className="flex items-center gap-2 hover:bg-muted p-2 rounded-md transition"><Share className="size-4" /> Share</button>
+            <WhatsAppGateModal variant="save" triggerRender={<button className="flex items-center gap-2 hover:bg-muted p-2 rounded-md transition" />}>
+              <Heart className="size-4" /> Save
+            </WhatsAppGateModal>
+          </div>
         </div>
 
-        <div className="mt-8 grid gap-10 md:grid-cols-[1fr_320px]">
-          <div className="space-y-10">
-            <p className="text-sm text-muted-foreground">
-              {property.guests} guests · {property.beds} {property.beds === 1 ? "bed" : "beds"} ·{" "}
-              {property.propertyType}
-            </p>
+        {/* Gallery */}
+        <PropertyGallery images={property.images} title={property.title} />
 
-            <TrustBadgeRow verificationLevel={property.verificationLevel} hostBadge={property.hostBadge} />
-
-            <p>{property.description}</p>
-
-            <div className="border-t border-border pt-10">
-              <h2 className="font-perfectly-nineties-regular text-2xl">Amenities</h2>
-              <ul className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                {property.amenities.map((amenity) => (
-                  <li key={amenity}>{amenity}</li>
-                ))}
-              </ul>
+        {/* Two Column Layout */}
+        <div className="mt-8 grid gap-12 md:grid-cols-[1fr_33.333333%]">
+          
+          {/* Left Column */}
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-[22px] font-semibold text-ink-black">Entire rental unit hosted by {property.hostName}</h2>
+                <p className="text-ink-black">
+                  {property.guests} guests · 1 bedroom · {property.beds} {property.beds === 1 ? "bed" : "beds"} · 1 bath
+                </p>
+              </div>
+              <div className="size-14 rounded-full overflow-hidden bg-muted flex items-center justify-center text-xl font-semibold text-muted-foreground">
+                {property.hostName.charAt(0)}
+              </div>
             </div>
 
-            <div className="border-t border-border pt-10">
-              <h2 className="font-perfectly-nineties-regular text-2xl">House rules</h2>
-              <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+            <Separator />
+
+            {/* Highlights */}
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <Medal className="size-8 text-ink-black shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-ink-black">{property.hostName} is a Superhost</h3>
+                  <p className="text-muted-foreground text-sm">Superhosts are experienced, highly rated hosts who are committed to providing great stays for guests.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <MapPin className="size-8 text-ink-black shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-ink-black">Great location</h3>
+                  <p className="text-muted-foreground text-sm">100% of recent guests gave the location a 5-star rating.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <CalendarIcon className="size-8 text-ink-black shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-ink-black">Free cancellation</h3>
+                  <p className="text-muted-foreground text-sm">{property.cancellationPolicy} cancellation policy.</p>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Description */}
+            <div>
+              <p className="text-ink-black leading-relaxed line-clamp-6">{property.description}</p>
+              <button className="mt-4 flex items-center gap-1 font-semibold underline text-ink-black">Show more <ChevronRight className="size-4" /></button>
+            </div>
+
+            <Separator />
+
+            {/* Amenities */}
+            <div>
+              <h2 className="text-[22px] font-semibold text-ink-black mb-6">What this place offers</h2>
+              <ul className="grid grid-cols-2 gap-y-4 gap-x-4 text-ink-black">
+                {property.amenities.map((amenity) => (
+                  <li key={amenity} className="flex items-center gap-4">
+                    {/* Placeholder icon */}
+                    <div className="size-6 shrink-0 bg-muted rounded-full" />
+                    {amenity}
+                  </li>
+                ))}
+              </ul>
+              <Button variant="outline" className="mt-8 border-border text-ink-black hover:bg-muted font-semibold text-base py-6 px-6">
+                Show all {property.amenities.length} amenities
+              </Button>
+            </div>
+
+            <Separator />
+            
+            {/* Calendar Placeholder */}
+            <div>
+               <h2 className="text-[22px] font-semibold text-ink-black mb-1">7 nights in {property.city}</h2>
+               <p className="text-sm text-muted-foreground mb-6">Select dates for exact pricing</p>
+               <div className="h-[300px] bg-muted/30 rounded-xl border border-border flex items-center justify-center text-muted-foreground">
+                  Calendar Widget Placeholder
+               </div>
+            </div>
+
+          </div>
+
+          {/* Right Column - Sticky Booking Card */}
+          <aside className="relative">
+            <div className="sticky top-28 rounded-xl border border-border bg-background p-6 shadow-[0_6px_16px_rgba(0,0,0,0.12)]">
+              <div className="mb-6 flex items-baseline gap-1">
+                <span className="text-[22px] font-semibold text-ink-black">₹{property.pricePerNight.toLocaleString("en-IN")}</span>
+                <span className="text-ink-black">night</span>
+              </div>
+              
+              <div className="mb-4 rounded-xl border border-border overflow-hidden">
+                <div className="flex border-b border-border">
+                  <div className="flex-1 p-3 border-r border-border cursor-pointer">
+                    <div className="text-[10px] font-bold uppercase text-ink-black">Check-in</div>
+                    <div className="text-sm text-muted-foreground">Add date</div>
+                  </div>
+                  <div className="flex-1 p-3 cursor-pointer">
+                    <div className="text-[10px] font-bold uppercase text-ink-black">Checkout</div>
+                    <div className="text-sm text-muted-foreground">Add date</div>
+                  </div>
+                </div>
+                <div className="p-3 cursor-pointer flex justify-between items-center">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase text-ink-black">Guests</div>
+                    <div className="text-sm text-ink-black">1 guest</div>
+                  </div>
+                  <ChevronRight className="size-5 text-ink-black rotate-90" />
+                </div>
+              </div>
+
+              <WhatsAppGateModal variant="contact" triggerRender={<Button className="w-full rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-base font-semibold transition-colors">Reserve</Button>}>
+                Reserve
+              </WhatsAppGateModal>
+              
+              <p className="mt-4 text-center text-sm text-ink-black">You won&rsquo;t be charged yet</p>
+              
+              <div className="mt-6 space-y-4">
+                <div className="flex justify-between text-ink-black">
+                  <span className="underline">₹{property.pricePerNight.toLocaleString("en-IN")} x 5 nights</span>
+                  <span>₹{(property.pricePerNight * 5).toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between text-ink-black">
+                  <span className="underline">Cleaning fee</span>
+                  <span>₹1,500</span>
+                </div>
+                <div className="flex justify-between text-ink-black">
+                  <span className="underline">Service fee</span>
+                  <span>₹2,100</span>
+                </div>
+              </div>
+              
+              <Separator className="my-6" />
+              
+              <div className="flex justify-between font-semibold text-ink-black">
+                <span>Total before taxes</span>
+                <span>₹{(property.pricePerNight * 5 + 3600).toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        {/* Full Width Sections Below Split */}
+        
+        {/* Reviews */}
+        <div className="mt-12 pt-12 border-t border-border">
+          <div className="mb-8 flex items-center gap-4 text-ink-black">
+            <Star className="size-6 fill-current" />
+            <h2 className="text-[22px] font-semibold">{property.rating} · {property.reviewCount} reviews</h2>
+          </div>
+          <div className="grid gap-x-16 gap-y-10 md:grid-cols-2">
+            {property.reviews.slice(0, 6).map((review) => (
+              <div key={review.id} className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="size-12 rounded-full bg-muted flex items-center justify-center text-lg font-semibold text-muted-foreground">
+                    {review.author.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-ink-black">{review.author}</h3>
+                    <p className="text-sm text-muted-foreground">{review.date}</p>
+                  </div>
+                </div>
+                <p className="text-ink-black line-clamp-3 leading-relaxed">{review.text}</p>
+                {review.hostReply && (
+                  <div className="mt-2 pl-4 border-l-2 border-border">
+                    <p className="text-sm font-semibold mb-1">Response from {property.hostName}</p>
+                    <p className="text-sm text-ink-black">{review.hostReply}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <Button variant="outline" className="mt-8 border-border text-ink-black hover:bg-muted font-semibold text-base py-6 px-6">
+            Show all {property.reviewCount} reviews
+          </Button>
+        </div>
+
+        {/* Map / Location */}
+        <div className="mt-12 pt-12 border-t border-border">
+           <h2 className="text-[22px] font-semibold text-ink-black mb-6">Where you&rsquo;ll be</h2>
+           <p className="mb-6 text-ink-black">{property.city}, {property.region}, India</p>
+           <div className="h-[480px] bg-muted/30 rounded-xl border border-border flex items-center justify-center text-muted-foreground">
+             Map View Placeholder
+           </div>
+           <p className="mt-6 text-ink-black font-semibold">Exact location provided after booking.</p>
+        </div>
+
+        {/* Host Details */}
+        <div className="mt-12 pt-12 border-t border-border">
+          <HostCard host={property.host} />
+        </div>
+
+        {/* Things to know */}
+        <div className="mt-12 pt-12 border-t border-border">
+          <h2 className="text-[22px] font-semibold text-ink-black mb-6">Things to know</h2>
+          <div className="grid gap-8 md:grid-cols-3">
+            <div>
+              <h3 className="font-semibold text-ink-black mb-3">House rules</h3>
+              <ul className="space-y-3 text-ink-black">
                 {property.houseRules.map((rule) => (
                   <li key={rule}>{rule}</li>
                 ))}
               </ul>
-              <p className="mt-3 text-sm">
-                Cancellation policy: <span className="font-medium">{property.cancellationPolicy}</span>
-              </p>
+              <button className="mt-4 flex items-center gap-1 font-semibold underline text-ink-black">Show more <ChevronRight className="size-4" /></button>
             </div>
-
-            <HostCard host={property.host} />
-
-            <div className="border-t border-border pt-10">
-              <h2 className="font-perfectly-nineties-regular text-2xl">Reviews</h2>
-              <div className="mt-4">
-                <ReviewSummary rating={property.rating} reviewCount={property.reviewCount} breakdown={property.reviewBreakdown} />
-              </div>
-              <div className="mt-4">
-                {property.reviews.map((review) => (
-                  <ReviewCard key={review.id} review={review} />
-                ))}
-              </div>
+            <div>
+              <h3 className="font-semibold text-ink-black mb-3">Safety & property</h3>
+              <ul className="space-y-3 text-ink-black">
+                <li>No carbon monoxide alarm</li>
+                <li>No smoke alarm</li>
+                <li>Security camera/recording device</li>
+              </ul>
+              <button className="mt-4 flex items-center gap-1 font-semibold underline text-ink-black">Show more <ChevronRight className="size-4" /></button>
             </div>
-
-            <p className="text-sm text-muted-foreground">
-              Located in {property.city}, {property.region}. The exact address is shared once the host confirms
-              your booking.
-            </p>
+            <div>
+              <h3 className="font-semibold text-ink-black mb-3">Cancellation policy</h3>
+              <ul className="space-y-3 text-ink-black">
+                <li>{property.cancellationPolicy}</li>
+                <li>Review the Host&rsquo;s full cancellation policy which applies even if you cancel for illness or disruptions caused by COVID-19.</li>
+              </ul>
+              <button className="mt-4 flex items-center gap-1 font-semibold underline text-ink-black">Show more <ChevronRight className="size-4" /></button>
+            </div>
           </div>
-
-          <aside className="order-first h-fit space-y-4 rounded-3xl border border-border bg-card p-5 shadow-glow md:order-none md:sticky md:top-28">
-            <p className="text-2xl font-semibold">
-              ₹{property.pricePerNight.toLocaleString("en-IN")}{" "}
-              <span className="text-sm font-normal text-muted-foreground">/ night, all-in</span>
-            </p>
-            <WhatsAppGateModal variant="contact" triggerRender={<Button className="w-full rounded-full" />}>
-              <MessageCircle className="size-4" />
-              Book via WhatsApp
-            </WhatsAppGateModal>
-            <WhatsAppGateModal
-              variant="save"
-              triggerRender={<Button variant="outline" className="w-full rounded-full" />}
-            >
-              <Heart className="size-4" />
-              Save to wishlist
-            </WhatsAppGateModal>
-          </aside>
         </div>
-
+        
+        {/* More stays */}
         {similar.length > 0 && (
-          <section className="mt-16">
-            <h2 className="font-perfectly-nineties-regular text-2xl">More stays in {property.city}</h2>
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 pt-12 border-t border-border">
+            <h2 className="text-[22px] font-semibold text-ink-black mb-6">More stays in {property.city}</h2>
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {similar.map((candidate) => (
                 <PropertyCard key={candidate.id} property={candidate} />
               ))}
             </div>
-          </section>
+          </div>
         )}
+
       </main>
       <SiteFooter />
     </>

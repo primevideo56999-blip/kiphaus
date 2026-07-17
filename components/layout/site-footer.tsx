@@ -15,7 +15,7 @@ const LEGAL_LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="mx-auto max-w-5xl px-4 py-16 text-sm text-muted-foreground">
+    <footer className="mx-auto max-w-7xl px-4 py-16 text-sm text-muted-foreground">
       <div className="grid gap-10 md:grid-cols-3">
         <div>
           <div className="flex items-center gap-2">

@@ -21,18 +21,18 @@ const fontDisplay = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "Verified Vacation Rentals & Direct Bookings | Kiphaus",
+  title: "Verified Vacation Rentals | Book Direct & Save | Kiphaus",
   description:
-    "Tired of hidden fees on vacation rentals? Kiphaus offers direct bookings for verified stays. Save money and book your perfect trip with confidence today.",
+    "Save money on verified vacation rentals by booking directly. Kiphaus connects you with trusted hosts for seamless, fee-free trips. Reserve today.",
   openGraph: {
-    title: "Kiphaus — Verified Stays & Direct Bookings",
-    description: "Discover the better way to travel. Connect directly with hosts for verified vacation rentals, zero hidden fees, and a seamless booking experience.",
+    title: "Skip the Fees: Direct Vacation Rentals on Kiphaus",
+    description: "Planning a trip shouldn't mean paying hidden fees. Browse thousands of beautiful homes and book directly with the hosts you trust.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kiphaus — Verified Stays & Direct Bookings",
-    description: "Skip the middleman. Book verified vacation rentals directly with hosts on Kiphaus. Save on fees and stay with confidence.",
+    title: "Kiphaus | No-Fee Direct Vacation Rentals",
+    description: "We're fixing travel by cutting out the middleman. Find incredible places to stay and deal directly with the owners. Better trips, zero booking fees.",
   },
 }
 

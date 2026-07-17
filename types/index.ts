@@ -68,6 +68,12 @@ export type Property = {
   host: Host
 }
 
+export type ListingStatus = "active" | "draft" | "paused"
+
+export type VerificationStepStatus = "approved" | "in_review" | "action_needed" | "not_started"
+
+export type SubscriptionPlanId = "basic" | "premium"
+
 export type SearchParams = {
   city?: string
   type?: PropertyType

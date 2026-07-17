@@ -35,20 +35,20 @@ export default async function SearchPage({
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-5xl px-4 pt-28 pb-20">
-        <SearchBar className="mb-8" />
-        <div className="flex flex-col gap-8 md:flex-row">
+      <main className="mx-auto w-full max-w-7xl px-4 pt-10 pb-20 sm:px-6 lg:px-8">
+        <SearchBar className="mb-10 max-w-4xl" />
+        <div className="flex flex-col gap-10 md:flex-row">
           <SearchFilters />
           <div className="flex-1">
             {results.length === 0 ? (
               <EmptyState city={params.city} />
             ) : (
               <>
-                <p className="mb-4 text-sm text-muted-foreground">
+                <p className="mb-6 text-sm font-medium text-foreground">
                   {results.length} {results.length === 1 ? "stay" : "stays"}
                   {params.city ? ` in ${params.city}` : ""}
                 </p>
-                <div className="grid gap-6 sm:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {results.map((property) => (
                     <PropertyCard key={property.id} property={property} />
                   ))}
