@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button"
 import { propertiesByCity, propertyById } from "@/lib/mock-data"
 import { Separator } from "@/components/ui/separator"
 import { HostCard } from "@/components/features/guest/host-card"
+import { FadeIn } from "@/components/motion/fade-in"
+import { StaggerList, StaggerItem } from "@/components/motion/stagger-list"
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -52,7 +54,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         </div>
 
         {/* Gallery */}
-        <PropertyGallery images={property.images} title={property.title} />
+        <FadeIn inView={false}>
+          <PropertyGallery images={property.images} title={property.title} />
+        </FadeIn>
 
         {/* Two Column Layout */}
         <div className="mt-8 grid gap-12 md:grid-cols-[1fr_33.333333%]">
@@ -276,11 +280,13 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         {similar.length > 0 && (
           <div className="mt-12 pt-12 border-t border-border">
             <h2 className="text-[22px] font-semibold text-ink-black mb-6">More stays in {property.city}</h2>
-            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <StaggerList className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {similar.map((candidate) => (
-                <PropertyCard key={candidate.id} property={candidate} />
+                <StaggerItem key={candidate.id}>
+                  <PropertyCard property={candidate} />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerList>
           </div>
         )}
 
