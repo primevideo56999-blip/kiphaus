@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/site-footer"
 import { PageHero } from "@/components/features/public/page-hero"
 import { VerificationLevels } from "@/components/features/public/verification-levels"
 import { CtaBanner } from "@/components/features/public/cta-banner"
+import { StaggerList, StaggerItem } from "@/components/motion/stagger-list"
 
 const PRINCIPLES = [
   {
@@ -54,15 +55,17 @@ export default function AboutPage() {
 
         <section className="border-y border-border bg-ash-mist py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-8 sm:grid-cols-3">
+            <StaggerList className="grid gap-8 sm:grid-cols-3">
               {PRINCIPLES.map(({ icon: Icon, title, description }) => (
-                <div key={title}>
-                  <Icon className="size-6 text-primary" aria-hidden="true" />
-                  <h3 className="mt-4 font-semibold text-ink-black">{title}</h3>
-                  <p className="mt-2 text-body-sm text-smoke tracking-body-sm">{description}</p>
-                </div>
+                <StaggerItem key={title}>
+                  <div>
+                    <Icon className="size-6 text-primary" aria-hidden="true" />
+                    <h3 className="mt-4 font-semibold text-ink-black">{title}</h3>
+                    <p className="mt-2 text-body-sm text-smoke tracking-body-sm">{description}</p>
+                  </div>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerList>
           </div>
         </section>
 

@@ -1,6 +1,7 @@
 import { ShieldCheck, Home, Video, MapPin } from "lucide-react"
 import type { VerificationLevel } from "@/types"
 import { verificationLabel } from "@/types"
+import { StaggerList, StaggerItem } from "@/components/motion/stagger-list"
 
 const LEVEL_DETAIL: Record<VerificationLevel, { icon: typeof ShieldCheck; description: string }> = {
   1: {
@@ -35,22 +36,24 @@ export function VerificationLevels() {
         </p>
       </div>
 
-      <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <StaggerList className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {levels.map((level) => {
           const { icon: Icon, description } = LEVEL_DETAIL[level]
           return (
-            <div key={level} className="rounded-2xl border border-border p-6">
-              <div className="flex size-11 items-center justify-center rounded-full bg-accent">
-                <Icon className="size-5 text-accent-foreground" aria-hidden="true" />
+            <StaggerItem key={level}>
+              <div className="rounded-2xl border border-border p-6">
+                <div className="flex size-11 items-center justify-center rounded-full bg-accent">
+                  <Icon className="size-5 text-accent-foreground" aria-hidden="true" />
+                </div>
+                <h3 className="mt-4 font-semibold text-ink-black">
+                  Level {level} · {verificationLabel[level]}
+                </h3>
+                <p className="mt-2 text-body-sm text-smoke tracking-body-sm">{description}</p>
               </div>
-              <h3 className="mt-4 font-semibold text-ink-black">
-                Level {level} · {verificationLabel[level]}
-              </h3>
-              <p className="mt-2 text-body-sm text-smoke tracking-body-sm">{description}</p>
-            </div>
+            </StaggerItem>
           )
         })}
-      </div>
+      </StaggerList>
     </section>
   )
 }
