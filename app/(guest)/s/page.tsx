@@ -4,6 +4,8 @@ import { SearchBar } from "@/components/features/guest/search-bar"
 import { SearchFilters } from "@/components/features/guest/search-filters"
 import { PropertyCard } from "@/components/features/guest/property-card"
 import { EmptyState } from "@/components/features/guest/empty-state"
+import { FadeIn } from "@/components/motion/fade-in"
+import { StaggerList, StaggerItem } from "@/components/motion/stagger-list"
 import { searchProperties } from "@/lib/mock-data"
 import type { PropertyType, SearchParams, VerificationLevel } from "@/types"
 
@@ -36,23 +38,29 @@ export default async function SearchPage({
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-7xl px-4 pt-10 pb-20 sm:px-6 lg:px-8">
-        <SearchBar className="mb-10 max-w-4xl" />
+        <FadeIn inView={false} className="mb-10 max-w-4xl">
+          <SearchBar className="w-full" />
+        </FadeIn>
         <div className="flex flex-col gap-10 md:flex-row">
           <SearchFilters />
           <div className="flex-1">
             {results.length === 0 ? (
-              <EmptyState city={params.city} />
+              <FadeIn inView={false}>
+                <EmptyState city={params.city} />
+              </FadeIn>
             ) : (
               <>
                 <p className="mb-6 text-sm font-medium text-foreground">
                   {results.length} {results.length === 1 ? "stay" : "stays"}
                   {params.city ? ` in ${params.city}` : ""}
                 </p>
-                <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <StaggerList inView={false} className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {results.map((property) => (
-                    <PropertyCard key={property.id} property={property} />
+                    <StaggerItem key={property.id}>
+                      <PropertyCard property={property} />
+                    </StaggerItem>
                   ))}
-                </div>
+                </StaggerList>
               </>
             )}
           </div>
