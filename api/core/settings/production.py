@@ -142,10 +142,12 @@ SIMPLE_JWT = {
 # API — list real origins explicitly.
 # _cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
 # CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
-# CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "https://kiphaus-frontend.onrender.com",
+    "http://localhost:5173",
+    "https://kiphaus.vercel.app",
 ]
 
 # ── Auth cookie / frontend link config ────────────────────────────────────────
