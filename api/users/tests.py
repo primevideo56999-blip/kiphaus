@@ -94,3 +94,32 @@ class VerifyAppleTokenTests(TestCase):
         mock_decode.side_effect = pyjwt_module.PyJWTError("bad token")
         with self.assertRaises(SocialAuthError):
             verify_apple_token("fake-token")
+
+
+class SocialLoginViewTests(TestCase):
+    def setUp(self):
+        from rest_framework.test import APIClient
+        self.client = APIClient()
+
+    @patch("users.views.verify_google_token")
+    def test_google_login_creates_user_and_sets_cookie(self, mock_verify):
+        mock_verify.return_value = {"sub": "g-100", "email": "new-google@example.com"}
+        response = self.client.post("/api/v1/auth/google/", {"id_token": "fake"}, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["user"]["email"], "new-google@example.com")
+        self.assertIn("access", response.data)
+        self.assertIn("kh_refresh", response.cookies)
+
+    @patch("users.views.verify_google_token")
+    def test_google_login_rejects_invalid_token(self, mock_verify):
+        mock_verify.side_effect = SocialAuthError("bad token")
+        response = self.client.post("/api/v1/auth/google/", {"id_token": "fake"}, format="json")
+        self.assertEqual(response.status_code, 400)
+
+    @patch("users.views.verify_apple_token")
+    def test_apple_login_creates_user_and_sets_cookie(self, mock_verify):
+        mock_verify.return_value = {"sub": "a-100", "email": "new-apple@example.com"}
+        response = self.client.post("/api/v1/auth/apple/", {"id_token": "fake"}, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["user"]["email"], "new-apple@example.com")
+        self.assertIn("kh_refresh", response.cookies)
