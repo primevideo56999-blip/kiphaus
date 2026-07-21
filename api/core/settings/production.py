@@ -149,11 +149,13 @@ SIMPLE_JWT = {
 # CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = [
-    "https://kiphaus-frontend.onrender.com",
-    "http://localhost:5173",
-    "https://kiphaus.vercel.app",
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "https://kiphaus-frontend.onrender.com",
+#     "http://localhost:5173",
+#     "https://kiphaus.vercel.app",
+# ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_URLS_REGEX = r"^/api/.*$"
 
