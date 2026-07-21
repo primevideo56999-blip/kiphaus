@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
@@ -13,6 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from notifications.email import send_raw_email, send_welcome_email
 from .models import HostProfile, User
 from .serializers import (
     BecomeHostSerializer,
@@ -36,13 +36,14 @@ def _send_verification_email(user):
     token = email_verification_token.make_token(user)
     frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
     link = f"{frontend_url}/verify?uid={uid}&token={token}"
-    send_mail(
+    send_raw_email(
         subject="Verify your Kiphaus email",
-        message=f"Confirm your email address: {link}\n\nIf you didn't create a Kiphaus account, you can ignore this email.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=True,
+        to=user.email,
+        text=f"Confirm your email address: {link}\n\nIf you didn't create a Kiphaus account, you can ignore this email.",
+        idempotency_key=f"verify-email/{user.pk}/{token}",
     )
+
+
 
 
 def _cookie_domain():
@@ -99,12 +100,10 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         try:
             user = serializer.save()
+            send_welcome_email(user)
+            _send_verification_email(user)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        # try:
-        #     _send_verification_email(user)
-        # except Exception as e:
-        #     print(f"Email error: {e}")
         refresh = RefreshToken.for_user(user)
         response = Response({
             "user":   UserSerializer(user).data,
@@ -161,9 +160,14 @@ class CookieTokenRefreshView(TokenRefreshView):
         try:
             serializer.is_valid(raise_exception=True)
         except (TokenError, InvalidToken):
-            response = Response({"detail": "Refresh token invalid or expired."}, status=status.HTTP_401_UNAUTHORIZED)
-            _clear_refresh_cookie(response)
-            return response
+            # Don't clear the cookie here: with ROTATE_REFRESH_TOKENS +
+            # BLACKLIST_AFTER_ROTATION, a second concurrent refresh call (two
+            # tabs, a stale restoreSession() racing a fresh login) reuses an
+            # already-rotated token and lands here even though the session is
+            # still good — clearing would delete the cookie a sibling request
+            # just legitimately set. A dead cookie is harmless: it just keeps
+            # 401ing until logout or natural expiry overwrites it.
+            return Response({"detail": "Refresh token invalid or expired."}, status=status.HTTP_401_UNAUTHORIZED)
 
         data = serializer.validated_data
         response = Response({"access": data["access"]}, status=status.HTTP_200_OK)
@@ -252,15 +256,14 @@ class PasswordResetRequestView(APIView):
             token = default_token_generator.make_token(user)
             frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
             link = f"{frontend_url}/reset-password?uid={uid}&token={token}"
-            send_mail(
+            send_raw_email(
                 subject="Reset your Kiphaus password",
-                message=(
+                to=user.email,
+                text=(
                     f"Reset your password: {link}\n\n"
                     "If you didn't request this, you can safely ignore this email."
                 ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=True,
+                idempotency_key=f"password-reset/{user.pk}/{token}",
             )
         # Always the same response — don't leak whether the email exists.
         return Response({"detail": "If an account exists for that email, a reset link has been sent."})

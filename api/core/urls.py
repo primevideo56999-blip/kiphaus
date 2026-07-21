@@ -16,6 +16,7 @@ urlpatterns = [
     path("api/v1/analytics/",   include("analytics.urls")),
     path("api/v1/chat/",        include("chat.urls")),
     path("api/v1/verification/",include("verification.urls")),
+    path("api/v1/notifications/",include("notifications.urls")),
 ]
 
 if settings.DEBUG:

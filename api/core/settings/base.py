@@ -75,6 +75,7 @@ DATABASES = {
         "PASSWORD": env("DB_PASSWORD"),
         "HOST": env("DB_HOST", default="localhost"),
         "PORT": env("DB_PORT", default="5432"),
+        "OPTIONS": {"sslmode": env("DB_SSLMODE", default="prefer")},
     }
 }
 
@@ -140,8 +141,11 @@ AUTH_COOKIE_DOMAIN = env("AUTH_COOKIE_DOMAIN", default="")
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 
 # ── Social login (Google/Apple) — see users/social.py ─────────────────────────
-GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")
-APPLE_CLIENT_ID  = env("APPLE_CLIENT_ID", default="")
+GOOGLE_CLIENT_ID     = env("GOOGLE_CLIENT_ID", default="")
+# Unused by the current id_token verification flow (only the audience/client
+# ID is checked) — kept for a future server-side OAuth code exchange.
+GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET", default="")
+APPLE_CLIENT_ID      = env("APPLE_CLIENT_ID", default="")
 
 # ── Celery ────────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = env("REDIS_URL", default="redis://127.0.0.1:6379/0")
@@ -178,14 +182,10 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
-# ── Email ─────────────────────────────────────────────────────────────────────
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.sendgrid.net"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "apikey"
-EMAIL_HOST_PASSWORD = env("SENDGRID_API_KEY", default="")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@yourdomain.com")
+# ── Email (Resend — see notifications/email.py) ────────────────────────────────
+RESEND_API_KEY = env("RESEND_API_KEY", default="")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Kiphaus <onboarding@resend.dev>")
+SUPPORT_EMAIL = env("SUPPORT_EMAIL", default="support@kiphaus.com")
 
 # ── i18n ──────────────────────────────────────────────────────────────────────
 LANGUAGE_CODE = "en-us"

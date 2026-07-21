@@ -30,7 +30,7 @@ export function PillRadio({
       />
       <label
         htmlFor={id}
-        className="block cursor-pointer rounded-full border border-border px-4 py-2.5 text-body-sm font-medium text-graphite tracking-body-sm transition-colors peer-checked:border-ink-black peer-checked:bg-ink-black peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-ring"
+        className="block cursor-pointer rounded-full border border-border px-4 py-2.5 text-body-sm font-medium text-graphite tracking-body-sm transition-colors peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-ring"
       >
         {children}
       </label>

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Laptop, Menu, Moon, Search, Sun } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { Bell, Laptop, Moon, Search, Sun, User } from "lucide-react"
 import { useTheme } from "next-themes"
 import { LogoMark } from "@/components/shared/logo"
 import { useAuth } from "@/hooks"
@@ -23,6 +24,11 @@ const THEME_OPTIONS = [
   { value: "light", label: "Light", icon: Sun },
   { value: "system", label: "System", icon: Laptop },
   { value: "dark", label: "Dark", icon: Moon },
+] as const
+
+const NAV_LINKS = [
+  { href: "/s", label: "Explore stays" },
+  { href: "/host", label: "Kiphaus your home" },
 ] as const
 
 export function Header({ variant = "solid" }: { variant?: "solid" | "floating" }) {
@@ -56,6 +62,8 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "floating" }
     router.push("/")
   }
 
+  const showCompactSearch = floating && !heroSearchVisible
+
   return (
     <header
       className={
@@ -67,110 +75,162 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "floating" }
       <div
         className={
           floating
-            ? "mx-4 flex h-16 w-full max-w-2xl items-center justify-between gap-6 rounded-xl bg-white/70 px-4 shadow-sm backdrop-blur-md md:px-6 dark:bg-black/40"
-            : "mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
+            ? "mx-4 flex h-16 w-full max-w-3xl items-center gap-4 rounded-full bg-white/70 px-4 shadow-sm backdrop-blur-md md:px-6 dark:bg-black/40"
+            : "mx-auto flex h-20 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8"
         }
       >
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
           <LogoMark className="text-primary w-8 h-auto" />
           <span className="text-[20px] font-semibold tracking-[-0.36px] text-primary">Kiphaus</span>
         </Link>
 
-        {floating && !heroSearchVisible && (
-          <>
-            <Link
-              href="/s"
-              aria-label="Search stays"
-              className="flex md:hidden items-center justify-center size-9 rounded-full bg-primary text-primary-foreground shrink-0"
-            >
-              <Search className="size-4" />
-            </Link>
-            <Link
-              href="/s"
-              className="hidden md:flex items-center rounded-full border border-border bg-white py-1 pl-4 pr-1 text-body-sm shadow-sm transition-shadow hover:shadow-md dark:bg-black/60"
-            >
-              <span className="font-semibold text-ink-black">Where</span>
-              <span className="ml-1.5 text-smoke">Gurugram areas</span>
-              <span className="mx-3 h-5 w-px bg-border" />
-              <span className="font-semibold text-ink-black">When</span>
-              <span className="ml-1.5 text-smoke">Add dates</span>
-              <span className="mx-3 h-5 w-px bg-border" />
-              <span className="font-semibold text-ink-black">Who</span>
-              <span className="ml-1.5 mr-2 text-smoke">Add guests</span>
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <Search className="size-3.5" />
-              </span>
-            </Link>
-          </>
-        )}
-
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-border p-2 pr-3 hover:shadow-md transition-shadow bg-card outline-none">
-            <Menu className="size-4 ml-1 text-foreground" />
-            {user ? (
-              <Avatar size="sm">
-                {user.avatar && <AvatarImage src={user.avatar} alt={user.full_name} />}
-                <AvatarFallback>{user.full_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
-              </Avatar>
+        <nav className="hidden flex-1 items-center justify-center md:flex">
+          <AnimatePresence mode="wait" initial={false}>
+            {showCompactSearch ? (
+              <motion.div
+                key="compact-search"
+                initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+              >
+                <Link
+                  href="/s"
+                  className="flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-body-sm font-semibold text-graphite shadow-sm transition-shadow hover:shadow-md dark:bg-black/60"
+                >
+                  <Search className="size-3.5" />
+                  Search stays
+                </Link>
+              </motion.div>
             ) : (
-              <div className="size-7 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false" className="block h-5 w-5 fill-current text-muted-foreground"><path d="M16 .7C7.56.7.7 7.56.7 16S7.56 31.3 16 31.3 31.3 24.44 31.3 16 24.44.7 16 .7zm0 28c-4.02 0-7.6-1.88-9.93-4.81a12.43 12.43 0 0 1 6.45-4.4A6.5 6.5 0 0 1 9.5 14a6.5 6.5 0 0 1 13 0 6.51 6.51 0 0 1-3.02 5.5 12.42 12.42 0 0 1 6.45 4.4A12.67 12.67 0 0 1 16 28.7z"></path></svg>
-              </div>
-            )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 p-4">
-            {user ? (
-              <>
-                <DropdownMenuItem render={<Link href="/wishlists" />}>Wishlists</DropdownMenuItem>
-                <DropdownMenuItem render={<Link href="/trips" />}>Trips</DropdownMenuItem>
-                <DropdownMenuItem render={<Link href="/messages" />}>Messages</DropdownMenuItem>
-                <DropdownMenuItem render={<Link href="/account" />}>Account</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem render={<Link href="/contact" />}>Help Centre</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem render={<Link href="/host" />}>Kiphaus your home</DropdownMenuItem>
-              </>
-            ) : (
-              <>
-                <DropdownMenuItem render={<Link href="/login" />}>Log in</DropdownMenuItem>
-                <DropdownMenuItem render={<Link href="/signup" />}>Sign up</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem render={<Link href="/host" />}>Kiphaus your home</DropdownMenuItem>
-              </>
-            )}
-
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Theme</DropdownMenuLabel>
-              <div className="px-2 pb-2">
-                {mounted && (
-                  <ToggleGroup
-                    value={theme ? [theme] : ["system"]}
-                    onValueChange={(values) => {
-                      if (values[0]) setTheme(values[0])
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
+              <motion.div
+                key="nav-links"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-1"
+              >
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-full px-4 py-2 text-body-sm font-semibold text-graphite tracking-body-sm transition-colors hover:bg-ash-mist hover:text-ink-black"
                   >
-                    {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
-                      <ToggleGroupItem key={value} value={value} aria-label={label} className="flex-1">
-                        <Icon className="size-4" />
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-                )}
-              </div>
-            </DropdownMenuGroup>
-
-            {user && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
-              </>
+                    {link.label}
+                  </Link>
+                ))}
+              </motion.div>
             )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </AnimatePresence>
+        </nav>
+
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <Link
+            href="/s"
+            aria-label="Search stays"
+            className="flex size-9 items-center justify-center rounded-full text-graphite transition-colors hover:bg-ash-mist md:hidden"
+          >
+            <Search className="size-4" />
+          </Link>
+
+          {user && (
+            <Link
+              href="/notifications"
+              aria-label="Notifications"
+              className="flex size-9 items-center justify-center rounded-full text-graphite transition-colors hover:bg-ash-mist"
+            >
+              <Bell className="size-4.5" />
+            </Link>
+          )}
+
+          {!user && (
+            <>
+              <Link
+                href="/login"
+                className="hidden rounded-full px-4 py-2 text-body-sm font-semibold text-ink-black transition-colors hover:bg-ash-mist sm:inline-flex sm:items-center"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                className="hidden rounded-full bg-primary px-4 py-2 text-body-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:inline-flex sm:items-center"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label={user ? "Account menu" : "Menu"}
+              className="flex size-9 items-center justify-center rounded-full text-graphite outline-none transition-colors hover:bg-ash-mist"
+            >
+              {user ? (
+                <Avatar size="sm">
+                  {user.avatar && <AvatarImage src={user.avatar} alt={user.full_name} />}
+                  <AvatarFallback>{user.full_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
+                </Avatar>
+              ) : (
+                <User className="size-4.5" />
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 p-4">
+              {user ? (
+                <>
+                  <DropdownMenuItem render={<Link href="/wishlists" />}>Wishlists</DropdownMenuItem>
+                  <DropdownMenuItem render={<Link href="/trips" />}>Trips</DropdownMenuItem>
+                  <DropdownMenuItem render={<Link href="/messages" />}>Messages</DropdownMenuItem>
+                  <DropdownMenuItem render={<Link href="/account" />}>Account</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem render={<Link href="/contact" />}>Help Centre</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem render={<Link href="/host" />}>Kiphaus your home</DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem render={<Link href="/login" />} className="sm:hidden">Log in</DropdownMenuItem>
+                  <DropdownMenuItem render={<Link href="/signup" />} className="sm:hidden">Sign up</DropdownMenuItem>
+                  <DropdownMenuSeparator className="sm:hidden" />
+                  <DropdownMenuItem render={<Link href="/contact" />}>Help Centre</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem render={<Link href="/host" />}>Kiphaus your home</DropdownMenuItem>
+                </>
+              )}
+
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                <div className="px-2 pb-2">
+                  {mounted && (
+                    <ToggleGroup
+                      value={theme ? [theme] : ["system"]}
+                      onValueChange={(values) => {
+                        if (values[0]) setTheme(values[0])
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+                        <ToggleGroupItem key={value} value={value} aria-label={label} className="flex-1">
+                          <Icon className="size-4" />
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  )}
+                </div>
+              </DropdownMenuGroup>
+
+              {user && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   )

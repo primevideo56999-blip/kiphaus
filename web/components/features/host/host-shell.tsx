@@ -1,14 +1,30 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import type { ReactNode } from "react"
+import { useEffect } from "react"
 import { FadeIn } from "@/components/motion/fade-in"
 import { LogoMark } from "@/components/shared/logo"
 import { HostNav } from "@/components/features/host/host-nav"
 import { useAuth } from "@/hooks"
 
 export function HostShell({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isLoading) return
+    if (!user) {
+      router.replace("/login")
+    } else if (user.role !== "host") {
+      router.replace("/host/onboarding")
+    }
+  }, [isLoading, user, router])
+
+  if (isLoading || !user || user.role !== "host") {
+    return null
+  }
 
   return (
     <div className="flex min-h-svh flex-col bg-background">

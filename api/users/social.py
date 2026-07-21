@@ -83,6 +83,8 @@ def resolve_social_user(provider: str, sub: str, email: str | None) -> User:
             role=User.Role.GUEST,
             is_verified=True,
         )
+        from notifications.email import send_welcome_email
+        send_welcome_email(user)
 
     SocialAccount.objects.create(user=user, provider=provider, provider_user_id=sub, email=email)
     return user

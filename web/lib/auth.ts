@@ -99,7 +99,10 @@ export async function apiFetch(path: string, opts: RequestInit = {}, allowRefres
   }
 
   if (!res.ok) return throwAuthError(res)
-  if (res.status === 204) return null
+  // 205 (LogoutView) carries no body per spec, same as 204 — calling
+  // res.json() on either throws "Unexpected end of JSON input" client-side,
+  // which then skips the caller's post-logout redirect entirely.
+  if (res.status === 204 || res.status === 205) return null
   return res.json()
 }
 

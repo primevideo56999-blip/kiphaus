@@ -66,7 +66,12 @@ export default function LoginPage() {
           </StaggerItem>
           <StaggerItem>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-body-sm font-medium text-graphite tracking-body-sm">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-body-sm font-medium text-graphite tracking-body-sm">Password</Label>
+                <Link href="/forget-password" className="text-body-sm font-semibold text-primary hover:underline tracking-body-sm">
+                  Forgot password?
+                </Link>
+              </div>
               <PasswordInput
                 id="password"
                 required
@@ -75,13 +80,6 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 className="rounded-full h-[50px] px-5 bg-transparent border-border hover:border-graphite/50 transition-colors text-body"
               />
-            </div>
-          </StaggerItem>
-          <StaggerItem>
-            <div className="flex items-center justify-end pt-1">
-              <Link href="/forget-password" className="text-body-sm font-semibold text-primary hover:underline tracking-body-sm">
-                Forgot password?
-              </Link>
             </div>
           </StaggerItem>
           <StaggerItem>

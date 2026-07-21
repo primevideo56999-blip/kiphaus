@@ -49,17 +49,17 @@ export function HeroSection() {
 
         {/* Search bar — sits where a CTA button would otherwise go.
             id is the sentinel Header watches to know when the hero's real
-            search bar has scrolled out of view (shows its own compact one). */}
+            search bar has scrolled out of view (shows its own compact one).
+            SearchBar renders its own solid card chrome, so no extra glass
+            wrapper here — a second nested pill just doubled the framing. */}
         <motion.div
           id="hero-search"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-7 sm:mt-8 w-full max-w-5xl"
+          className="mt-7 sm:mt-8 w-full max-w-4xl"
         >
-          <div className="p-2 sm:p-3 md:px-8 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl">
-            <SearchBar />
-          </div>
+          <SearchBar className="shadow-2xl" />
         </motion.div>
       </div>
     </section>

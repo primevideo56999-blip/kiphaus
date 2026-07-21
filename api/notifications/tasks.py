@@ -1,23 +1,9 @@
 from celery import shared_task
-from django.core.mail import send_mail
-from django.conf import settings
-from django.template.loader import render_to_string
+from .email import send_email
 
 
-def _send(subject, to_email, template, context):
-    """Helper — renders template and sends email."""
-    try:
-        body = render_to_string(template, context)
-        send_mail(
-            subject=subject,
-            message=body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[to_email],
-            fail_silently=False,
-        )
-    except Exception as e:
-        # Log but don't crash — email failure should never break the app
-        print(f"[EMAIL ERROR] {to_email} | {subject} | {e}")
+def _send(subject, to_email, template, context, idempotency_key=None):
+    send_email(subject, to_email, template, context, idempotency_key)
 
 
 # ── Booking notifications ─────────────────────────────────────────────────────
@@ -32,6 +18,7 @@ def notify_booking_requested(booking_id):
         to_email=booking.host.email,
         template="notifications/booking_requested_host.txt",
         context={"booking": booking},
+        idempotency_key=f"booking-requested-host/{booking_id}",
     )
     # Email to guest
     _send(
@@ -39,6 +26,7 @@ def notify_booking_requested(booking_id):
         to_email=booking.guest.email,
         template="notifications/booking_requested_guest.txt",
         context={"booking": booking},
+        idempotency_key=f"booking-requested-guest/{booking_id}",
     )
 
 
@@ -51,6 +39,7 @@ def notify_booking_confirmed(booking_id):
         to_email=booking.guest.email,
         template="notifications/booking_confirmed.txt",
         context={"booking": booking},
+        idempotency_key=f"booking-confirmed/{booking_id}",
     )
 
 
@@ -65,6 +54,7 @@ def notify_booking_cancelled(booking_id):
         to_email=notify_email,
         template="notifications/booking_cancelled.txt",
         context={"booking": booking},
+        idempotency_key=f"booking-cancelled/{booking_id}",
     )
 
 
@@ -77,6 +67,7 @@ def notify_booking_rejected(booking_id):
         to_email=booking.guest.email,
         template="notifications/booking_rejected.txt",
         context={"booking": booking},
+        idempotency_key=f"booking-rejected/{booking_id}",
     )
 
 
@@ -90,6 +81,7 @@ def notify_checkin_reminder(booking_id):
         to_email=booking.guest.email,
         template="notifications/checkin_reminder.txt",
         context={"booking": booking},
+        idempotency_key=f"checkin-reminder/{booking_id}",
     )
 
 
@@ -104,6 +96,7 @@ def notify_review_reminder(booking_id):
             to_email=booking.guest.email,
             template="notifications/review_reminder.txt",
             context={"booking": booking},
+            idempotency_key=f"review-reminder/{booking_id}",
         )
 
 
@@ -118,4 +111,5 @@ def notify_new_review(review_id):
         to_email=review.host.email,
         template="notifications/new_review.txt",
         context={"review": review},
+        idempotency_key=f"new-review/{review_id}",
     )

@@ -38,7 +38,7 @@ export function SubscriptionPlanCard({
         name: "Kiphaus",
         description: `${plan.name} host subscription`,
         prefill: { name: user?.full_name, email: user?.email, contact: user?.phone },
-        theme: { color: "#0f172a" },
+        theme: { color: "#a565ff" },
         handler: (response) => {
           verifyPayment({
             orderId: response.razorpay_order_id,

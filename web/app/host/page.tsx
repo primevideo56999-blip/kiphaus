@@ -7,6 +7,8 @@ import { VerificationLevels } from "@/components/features/public/verification-le
 import { CtaBanner } from "@/components/features/public/cta-banner"
 import { SubscriptionPlanCard } from "@/components/features/host/subscription-plan-card"
 import { SUBSCRIPTION_PLANS } from "@/lib/subscription-plans"
+import { FadeIn } from "@/components/motion/fade-in"
+import { StaggerList, StaggerItem } from "@/components/motion/stagger-list"
 
 export const metadata: Metadata = {
   title: "List Your Property, Zero Commission",
@@ -70,34 +72,36 @@ export default function HostLandingPage() {
 
         <section className="border-y border-border bg-ash-mist py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-8 sm:grid-cols-3">
+            <StaggerList className="grid gap-8 sm:grid-cols-3">
               {VALUE_PROPS.map(({ icon: Icon, title, description }) => (
-                <div key={title}>
+                <StaggerItem key={title}>
                   <Icon className="size-6 text-primary" aria-hidden="true" />
                   <h3 className="mt-4 font-semibold text-ink-black">{title}</h3>
                   <p className="mt-2 text-body-sm text-smoke tracking-body-sm">{description}</p>
-                </div>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerList>
           </div>
         </section>
 
         <VerificationLevels />
 
         <section id="pricing" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-xl text-center">
+          <FadeIn className="mx-auto max-w-xl text-center">
             <h2 className="font-perfectly-nineties-regular text-heading text-ink-black leading-heading">
               One flat price, no surprises
             </h2>
             <p className="mt-4 text-body text-smoke leading-body tracking-body">
               An annual subscription instead of a per-booking cut — the more you host, the more it pays off.
             </p>
-          </div>
-          <div className="mx-auto mt-12 grid max-w-3xl gap-6 sm:grid-cols-2">
+          </FadeIn>
+          <StaggerList className="mx-auto mt-12 grid max-w-3xl gap-6 sm:grid-cols-2">
             {SUBSCRIPTION_PLANS.map((plan) => (
-              <SubscriptionPlanCard key={plan.id} plan={plan} />
+              <StaggerItem key={plan.id}>
+                <SubscriptionPlanCard plan={plan} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         </section>
 
         <CtaBanner

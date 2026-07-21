@@ -38,7 +38,7 @@ export default async function SearchPage({
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-7xl px-4 pt-10 pb-20 sm:px-6 lg:px-8">
-        <FadeIn inView={false} className="mb-10 max-w-4xl">
+        <FadeIn inView={false} className="mb-10 mx-auto max-w-4xl">
           <SearchBar className="w-full" />
         </FadeIn>
         <div className="flex flex-col gap-10 md:flex-row">

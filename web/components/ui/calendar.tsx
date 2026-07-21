@@ -41,7 +41,7 @@ function Calendar({
       locale={locale}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString(locale?.code, { month: "short" }),
+          date.toLocaleString(locale?.code ?? "en-US", { month: "short" }),
         ...formatters,
       }}
       classNames={{
@@ -207,7 +207,7 @@ function CalendarDayButton({
     <Button
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString(locale?.code)}
+      data-day={day.date.toLocaleDateString(locale?.code ?? "en-US")}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&
@@ -218,7 +218,7 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       className={cn(
-        "relative isolate z-10 flex aspect-square size-(--cell-size) flex-col items-center justify-center gap-1 border border-transparent rounded-full leading-none font-semibold text-graphite transition-all group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-[3px] group-data-[focused=true]/day:ring-ring/50 data-[range-end=true]:rounded-full data-[range-end=true]:bg-ink-black data-[range-end=true]:text-white data-[range-end=true]:hover:border-transparent data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-ash-mist data-[range-middle=true]:text-ink-black data-[range-middle=true]:hover:border-transparent data-[range-middle=true]:hover:bg-white data-[range-start=true]:rounded-full data-[range-start=true]:bg-ink-black data-[range-start=true]:text-white data-[range-start=true]:hover:border-transparent data-[selected-single=true]:bg-ink-black data-[selected-single=true]:text-white data-[selected-single=true]:hover:border-transparent hover:border-ink-black hover:ring-1 hover:ring-ink-black hover:text-ink-black dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
+        "relative isolate z-10 flex aspect-square size-(--cell-size) flex-col items-center justify-center gap-1 border border-transparent rounded-full leading-none font-semibold text-graphite transition-all group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-[3px] group-data-[focused=true]/day:ring-ring/50 data-[range-end=true]:rounded-full data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-end=true]:hover:border-transparent data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-ash-mist data-[range-middle=true]:text-ink-black data-[range-middle=true]:hover:border-transparent data-[range-middle=true]:hover:bg-white data-[range-start=true]:rounded-full data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-start=true]:hover:border-transparent data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[selected-single=true]:hover:border-transparent hover:border-ink-black hover:ring-1 hover:ring-ink-black hover:text-ink-black dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
         className
       )}

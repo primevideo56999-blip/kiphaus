@@ -26,7 +26,7 @@ export function HostNav() {
             aria-current={active ? "page" : undefined}
             className={cn(
               "shrink-0 rounded-full px-4 py-2.5 text-body-sm font-semibold tracking-body-sm transition-colors",
-              active ? "bg-ink-black text-white" : "text-graphite hover:bg-ash-mist"
+              active ? "bg-primary text-primary-foreground" : "text-graphite hover:bg-ash-mist"
             )}
           >
             {item.label}

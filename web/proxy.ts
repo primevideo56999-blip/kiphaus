@@ -21,6 +21,7 @@ export const config = {
     "/trips/:path*",
     "/wishlists/:path*",
     "/messages/:path*",
+    "/notifications/:path*",
     "/rooms/:id/book",
     "/host/dashboard/:path*",
     "/host/properties/:path*",

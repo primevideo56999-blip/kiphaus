@@ -1,2 +1,6 @@
 from django.urls import path
-urlpatterns = []
+from .views import ContactMessageView
+
+urlpatterns = [
+    path("contact/", ContactMessageView.as_view(), name="contact-message"),
+]

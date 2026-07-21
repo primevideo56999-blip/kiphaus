@@ -8,10 +8,11 @@ import { addMonths, endOfMonth, format, startOfMonth } from "date-fns"
 import {
   Search,
   MapPin,
+  CalendarDays,
+  Users,
   Minus,
   Plus,
   ChevronRight,
-  CalendarDays,
   Globe,
   Compass,
   X,
@@ -55,6 +56,9 @@ function toDateParam(date: Date) {
 }
 
 type ActiveField = "where" | "when" | "who" | null
+
+const FIELD_LABEL_CLASS = "text-micro font-extrabold tracking-widest uppercase text-foreground select-none"
+const FIELD_VALUE_CLASS = "truncate text-sm font-medium text-muted-foreground group-hover:text-foreground"
 
 export function SearchBar({ className }: { className?: string }) {
   const router = useRouter()
@@ -174,26 +178,29 @@ export function SearchBar({ className }: { className?: string }) {
   return (
     <>
       {/* ========================================== */}
-      {/* DESKTOP SEARCH BAR (md+) - 3 FIELDS        */}
+      {/* DESKTOP SEARCH CONSOLE (md+) - 3 FIELDS    */}
+      {/* Boxed card with distinct field chips, not a */}
+      {/* single continuous pill — deliberately away  */}
+      {/* from the Airbnb Where/When/Who capsule.     */}
       {/* ========================================== */}
       <form
         onSubmit={handleSubmit}
         className={cn(
-          "relative hidden md:flex items-center rounded-full border border-border bg-card shadow-md transition-all duration-300",
-          activeField ? "bg-muted/60 shadow-xl" : "hover:shadow-lg",
+          "relative hidden md:flex items-stretch rounded-2xl border border-border bg-card shadow-md transition-shadow duration-300",
+          activeField ? "shadow-xl" : "hover:shadow-lg",
           className
         )}
       >
-        <div className="relative flex flex-1 items-center">
-          {/* Active Floating Background Highlight Pill */}
+        <div className="relative grid flex-1 grid-cols-3">
+          {/* Active field highlight */}
           {activeField && (
             <motion.div
               layoutId="search-field-highlight"
               className={cn(
-                "pointer-events-none absolute inset-y-1 rounded-full bg-card border border-border/40 shadow-lg",
-                activeField === "where" && "left-1 w-[36%]",
-                activeField === "when" && "left-[36%] w-[32%]",
-                activeField === "who" && "left-[68%] w-[31%]"
+                "pointer-events-none absolute inset-y-2 z-10 rounded-xl bg-muted",
+                activeField === "where" && "left-2 w-[calc(33.333%-8px)]",
+                activeField === "when" && "left-[33.333%] w-1/3",
+                activeField === "who" && "left-[66.666%] right-2 w-auto"
               )}
               transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 38 }}
             />
@@ -206,13 +213,12 @@ export function SearchBar({ className }: { className?: string }) {
           >
             <PopoverTrigger
               type="button"
-              className="group relative z-10 flex w-[36%] flex-col justify-center rounded-full py-3.5 pl-8 pr-4 text-left focus-visible:outline-none cursor-pointer"
+              className="group relative z-20 flex items-center gap-3 border-r border-border px-5 py-3.5 text-left focus-visible:outline-none cursor-pointer"
             >
-              <span className="text-micro font-extrabold tracking-widest uppercase text-foreground select-none">
-                Where
-              </span>
-              <span className="truncate text-sm font-medium text-muted-foreground group-hover:text-foreground">
-                {city || "Gurugram areas"}
+              <MapPin className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />
+              <span className="flex min-w-0 flex-col">
+                <span className={FIELD_LABEL_CLASS}>Where</span>
+                <span className={FIELD_VALUE_CLASS}>{city || "Gurugram areas"}</span>
               </span>
             </PopoverTrigger>
 
@@ -303,14 +309,6 @@ export function SearchBar({ className }: { className?: string }) {
             </PopoverContent>
           </Popover>
 
-          {/* DIVIDER 1 */}
-          <div
-            className={cn(
-              "h-8 w-px bg-border transition-opacity duration-200",
-              activeField === "where" || activeField === "when" ? "opacity-0" : "opacity-100"
-            )}
-          />
-
           {/* WHEN FIELD */}
           <Popover
             open={activeField === "when"}
@@ -318,13 +316,12 @@ export function SearchBar({ className }: { className?: string }) {
           >
             <PopoverTrigger
               type="button"
-              className="group relative z-10 flex w-[32%] flex-col justify-center rounded-full py-3.5 pl-6 pr-4 text-left focus-visible:outline-none cursor-pointer"
+              className="group relative z-20 flex items-center gap-3 border-r border-border px-5 py-3.5 text-left focus-visible:outline-none cursor-pointer"
             >
-              <span className="text-micro font-extrabold tracking-widest uppercase text-foreground select-none">
-                When
-              </span>
-              <span className="truncate text-sm font-medium text-muted-foreground group-hover:text-foreground">
-                {whenLabel}
+              <CalendarDays className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />
+              <span className="flex min-w-0 flex-col">
+                <span className={FIELD_LABEL_CLASS}>When</span>
+                <span className={FIELD_VALUE_CLASS}>{whenLabel}</span>
               </span>
             </PopoverTrigger>
 
@@ -455,14 +452,6 @@ export function SearchBar({ className }: { className?: string }) {
             </PopoverContent>
           </Popover>
 
-          {/* DIVIDER 2 */}
-          <div
-            className={cn(
-              "h-8 w-px bg-border transition-opacity duration-200",
-              activeField === "when" || activeField === "who" ? "opacity-0" : "opacity-100"
-            )}
-          />
-
           {/* WHO FIELD */}
           <Popover
             open={activeField === "who"}
@@ -470,13 +459,12 @@ export function SearchBar({ className }: { className?: string }) {
           >
             <PopoverTrigger
               type="button"
-              className="group relative z-10 flex w-[32%] flex-col justify-center rounded-full py-3.5 pl-6 pr-14 text-left focus-visible:outline-none cursor-pointer"
+              className="group relative z-20 flex items-center gap-3 px-5 py-3.5 text-left focus-visible:outline-none cursor-pointer"
             >
-              <span className="text-micro font-extrabold tracking-widest uppercase text-foreground select-none">
-                Who
-              </span>
-              <span className="truncate text-sm font-medium text-muted-foreground group-hover:text-foreground">
-                {whoLabel}
+              <Users className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />
+              <span className="flex min-w-0 flex-col">
+                <span className={FIELD_LABEL_CLASS}>Who</span>
+                <span className={FIELD_VALUE_CLASS}>{whoLabel}</span>
               </span>
             </PopoverTrigger>
 
@@ -606,53 +594,40 @@ export function SearchBar({ className }: { className?: string }) {
           </Popover>
         </div>
 
-        {/* SEARCH BUTTON WITH FRAMER MOTION ANIMATION */}
-        <div className="relative z-20 pr-2">
+        {/* SEARCH BUTTON */}
+        <div className="flex items-center border-l border-border p-2">
           <Button
             type="submit"
             aria-label="Search stays"
-            className={cn(
-              "relative flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300",
-              activeField ? "h-12 px-5" : "size-12 p-0"
-            )}
+            className="flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-primary-foreground shadow-sm hover:bg-primary/90"
           >
             <Search className="size-4 shrink-0" />
-            {activeField && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: "auto" }}
-                exit={{ opacity: 0, width: 0 }}
-                className="overflow-hidden whitespace-nowrap text-sm font-bold"
-              >
-                Search
-              </motion.span>
-            )}
+            <span className="text-sm font-bold">Search</span>
           </Button>
         </div>
       </form>
 
       {/* ========================================== */}
-      {/* MOBILE SEARCH COMPACT PILL (< md)          */}
+      {/* MOBILE SEARCH COMPACT CARD (< md)          */}
       {/* ========================================== */}
       <div className="md:hidden w-full">
         <button
           type="button"
           onClick={() => setMobileModalOpen(true)}
-          className="flex w-full items-center justify-between rounded-full border border-border bg-card px-4 py-2.5 shadow-md hover:shadow-lg transition-shadow"
+          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-md hover:shadow-lg transition-shadow"
         >
-          <div className="flex items-center gap-3">
-            <Search className="size-5 text-primary" />
-            <div className="text-left">
-              <p className="text-xs font-bold text-foreground">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Search className="size-4" />
+            </span>
+            <span className="min-w-0 text-left">
+              <p className="truncate text-sm font-bold text-foreground">
                 {city || "Where to?"}
               </p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="truncate text-xs text-muted-foreground">
                 {whenLabel} · {whoLabel}
               </p>
-            </div>
-          </div>
-          <div className="flex size-8 items-center justify-center rounded-full border border-border bg-muted text-foreground">
-            <Compass className="size-4" />
+            </span>
           </div>
         </button>
       </div>

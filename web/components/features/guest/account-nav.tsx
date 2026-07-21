@@ -29,7 +29,7 @@ export function AccountNav() {
             className={cn(
               "shrink-0 rounded-full px-4 py-2.5 text-body-sm font-semibold tracking-body-sm transition-colors md:shrink",
               active
-                ? "bg-ink-black text-white"
+                ? "bg-primary text-primary-foreground"
                 : "text-graphite hover:bg-ash-mist"
             )}
           >

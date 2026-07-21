@@ -5,27 +5,20 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
-  Micro design system (DESIGN.md): warm paper-on-ink neutrals (#f5f5f5
-  canvas, #221f1c ink, #797267 stone gray) with one azure action color
-  (#518bdb) and a blue→teal hero gradient. Token *names* below are legacy
-  (signal-blue, graphite, smoke, ash-mist…) — components reference them and
-  semantic tokens, so only values are repointed to keep this a
-  single-file retheme. Shape, spacing, and type scale intentionally
-  untouched: colors only.
+  Sequence design system (DESIGN.md): near-white editorial canvas (#ffffff
+  paper, #1d1d20 graphite ink, #757575 steel gray) with one violet action
+  color (#a565ff) as the system's sole chromatic accent, plus indigo-ink
+  links and a ledger-green success accent. Token *names* below are legacy
+  Kiphaus/Micro names (graphite, smoke, ash-mist…) — components reference
+  them and semantic tokens, so only values are repointed to keep this a
+  single-file retheme. Spacing scale intentionally untouched.
 */
 @theme inline {
-    --color-signal-blue: #518bdb;
     --color-ink-black: var(--ink-black);
     --color-graphite: var(--graphite);
     --color-smoke: var(--smoke);
     --color-paper-white: var(--paper-white);
     --color-ash-mist: var(--ash-mist);
-    --color-dusk-gradient: #518bdb;
-    --gradient-dusk-gradient: linear-gradient(
-      to right in oklab,
-      #518bdb 0%,
-      #36bab8 100%
-    );
 
     --font-perfectly-nineties-regular:
       "Perfectly Nineties Regular", var(--font-perfectly-nineties-regular),
@@ -34,12 +27,28 @@
       sans-serif;
 
     --text-micro: 10px;
-    --text-caption: 12px;
+    --text-caption: 11px;
     --text-body-sm: 14px;
     --text-body: 16px;
     --text-heading-sm: 18px;
-    --text-heading: 36px;
-    --text-display: 48px;
+    --text-heading: 40px;
+    --text-display: 46px;
+
+    /* DESIGN.md line-heights, keyed to the *pixel size* each token renders
+       at (not the doc's row label) — text-heading-sm stays 18px, which
+       lines up with DESIGN.md's "subheading" row, not its 24px "heading-sm"
+       row, so it takes that row's line-height. */
+    --leading-heading: 1;
+    --leading-heading-sm: 1.56;
+    --leading-body: 1.63;
+    --leading-display: 1;
+
+    /* DESIGN.md specifies no letter-spacing ("—") at body sizes; defining
+       these as `normal` makes the tracking-body/tracking-body-sm classes
+       already used across ~40 components resolve to a real utility instead
+       of silently generating no CSS. */
+    --tracking-body-sm: normal;
+    --tracking-body: normal;
 
     /*
       DESIGN.md's spacing scale is intentionally NOT mapped into Tailwind's
@@ -66,23 +75,39 @@
     --portal-spacing-80: 80px;
     --portal-spacing-100: 100px;
 
-    --radius-sm: 7px;
-    --radius-md: 16px;
-    --radius-lg: 22px;
-    --radius-xl: 30px;
-    --radius-full: 50px;
+    /* DESIGN.md named radii: inputs 4px, cards 8px, large-panels 16px,
+       buttons/badges 9999px (pill). xl is an unnamed larger step kept for
+       hero-scale panels between the card and pill ends of the scale. */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
 
-    --shadow-glow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --shadow-glow-inset: rgba(255, 255, 255, 0.6) 0px 0.5px 0px 0.5px inset;
-    --shadow-button: inset 0 1px 0 0 #ffffff, 0 0 0 1px rgba(0, 0, 0, 0.15),
-      0 3px 2px 0 rgba(0, 0, 0, 0.06);
-
-    /* Legacy Kiphaus token names, repointed to the current single accent. */
-    --color-navy-header: #221f1c;
-    --color-seafoam: #518bdb;
-    --color-seafoam-soft: #36bab8;
-    --color-seafoam-badge-bg: #cff2ef;
-    --color-seafoam-badge-fg: #221f1c;
+    /* DESIGN.md's shadow-stack tokens, verbatim from its Quick Start block. */
+    --shadow-subtle: rgba(58, 58, 64, 0.1) 0px 0px 0px 1px,
+      rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
+    --shadow-subtle-2: rgba(29, 29, 32, 0.08) 0px 0px 0px 1px;
+    --shadow-subtle-3: rgb(239, 239, 239) 0px 0px 0px 2px,
+      rgba(0, 0, 0, 0.01) 0px 22px 9px 0px, rgba(0, 0, 0, 0.04) 0px 12px 7px 0px,
+      rgba(0, 0, 0, 0.06) 0px 5px 5px 0px, rgba(0, 0, 0, 0.07) 0px 1px 3px 0px;
+    --shadow-sm: rgba(99, 102, 241, 0.4) 0px 0px 8px 2px;
+    --shadow-subtle-4: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
+    --shadow-subtle-5: rgba(117, 117, 117, 0.2) 0px 0px 0px 1px,
+      rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    --shadow-subtle-7: rgba(80, 80, 80, 0.1) 0px 0px 0px 1px;
+    --shadow-subtle-8: rgba(29, 29, 32, 0.08) 0px 0px 0px 1px,
+      rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
+    --shadow-sm-2: rgba(0, 0, 0, 0.04) 0px 4px 6px 0px,
+      rgb(242, 242, 242) 0px 0px 0px 4px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px;
+    --shadow-subtle-9: rgba(29, 29, 32, 0.08) 0px 0px 0px 1px,
+      rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px;
+    --shadow-subtle-10: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    --shadow-subtle-11: rgba(117, 117, 117, 0.1) 0px 0px 0px 1px,
+      rgba(0, 0, 0, 0.05) 0px 10px 15px -3px,
+      rgba(0, 0, 0, 0.05) 0px 4px 6px -4px;
+    --shadow-subtle-12: rgba(0, 0, 0, 0.1) 0px 1px 1px 0px inset;
+    --shadow-subtle-13: rgb(165, 101, 255) 0px 0px 0px 1px;
 
     /* Shadcn color mappings */
     --color-sidebar-ring: var(--sidebar-ring);
@@ -119,95 +144,98 @@
 }
 
 :root {
-    /* page canvas — DESIGN.md Paper White, warm off-white base */
-    --background: #f5f5f5;
-    /* ink black #221f1c — warm near-black, never pure #000 per DESIGN.md */
-    --foreground: #221f1c;
+    /* page canvas — DESIGN.md Paper White */
+    --background: #ffffff;
+    /* Graphite — near-black with a barely-warm tint, never pure #000 */
+    --foreground: #1d1d20;
     --card: #ffffff;
-    --card-foreground: #221f1c;
+    --card-foreground: #1d1d20;
     --popover: #ffffff;
-    --popover-foreground: #221f1c;
-    /* Azure Action — the one chromatic CTA color */
-    --primary: #518bdb;
+    --popover-foreground: #1d1d20;
+    /* Violet Pulse — the one chromatic accent in the system */
+    --primary: #a565ff;
     --primary-foreground: #ffffff;
-    --secondary: #eceae8;
-    --secondary-foreground: #221f1c;
-    --muted: #eceae8;
-    /* stone gray — 4.7:1 on white cards */
-    --muted-foreground: #797267;
-    --accent: #eceae8;
-    --accent-foreground: #221f1c;
-    --destructive: #ed6d68;
+    --secondary: #f7f7f7;
+    --secondary-foreground: #1d1d20;
+    --muted: #f1f1f1;
+    /* Steel — muted helper text, secondary table text */
+    --muted-foreground: #757575;
+    --accent: #ebebff;
+    --accent-foreground: #5e5cff;
+    /* Not part of DESIGN.md (no error/danger token is specified); a
+       similarly-desaturated red kept out of the accent rotation, used only
+       for destructive actions and validation errors. */
+    --destructive: #c0362c;
     --destructive-foreground: #ffffff;
-    --border: #e7e5e2;
-    --input: #d5d2ce;
-    --ring: #518bdb;
-    --chart-1: #518bdb;
-    --chart-2: #36bab8;
-    --chart-3: #ed6d68;
-    --chart-4: #e5a057;
-    --chart-5: #bf89cd;
-    --radius: 22px;
-    --sidebar: #ffffff;
-    --sidebar-foreground: #221f1c;
-    --sidebar-primary: #518bdb;
+    --border: #e5e7eb;
+    --input: #d1d9e4;
+    --ring: #a565ff;
+    --chart-1: #a565ff;
+    --chart-2: #5e5cff;
+    --chart-3: #2e7317;
+    --chart-4: #e0c9ff;
+    --chart-5: #808076;
+    --radius: 8px;
+    --sidebar: #f7f7f7;
+    --sidebar-foreground: #1d1d20;
+    --sidebar-primary: #a565ff;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #eceae8;
-    --sidebar-accent-foreground: #221f1c;
-    --sidebar-border: #e7e5e2;
-    --sidebar-ring: #518bdb;
+    --sidebar-accent: #ebebff;
+    --sidebar-accent-foreground: #5e5cff;
+    --sidebar-border: #e5e7eb;
+    --sidebar-ring: #a565ff;
 
     /* Legacy Portal tokens, indirected so .dark can override them (see below). */
-    --ink-black: #221f1c;
-    --graphite: #797267;
-    --smoke: #797267;
-    --paper-white: #f5f5f5;
-    --ash-mist: #eceae8;
+    --ink-black: #1d1d20;
+    --graphite: #42424a;
+    --smoke: #757575;
+    --paper-white: #ffffff;
+    --ash-mist: #f1f1f1;
 }
 
 .dark {
-    /* DESIGN.md specifies light only; this is a warm-neutral inversion that
-       keeps Azure Action as the one accent for the existing dark-mode toggle. */
-    --background: #171512;
-    --foreground: #f5f5f5;
-    --card: #201d1a;
-    --card-foreground: #f5f5f5;
-    --popover: #201d1a;
-    --popover-foreground: #f5f5f5;
-    --primary: #7aa7e8;
-    --primary-foreground: #171512;
-    --secondary: #2a2724;
-    --secondary-foreground: #f5f5f5;
-    --muted: #2a2724;
-    --muted-foreground: #a8a29a;
-    --accent: #2a2724;
-    --accent-foreground: #f5f5f5;
-    --destructive: #ed6d68;
+    /* DESIGN.md specifies light only; this is a cool-neutral inversion that
+       keeps Violet Pulse as the one accent for the existing dark-mode toggle. */
+    --background: #131316;
+    --foreground: #f1f1f1;
+    --card: #1c1c20;
+    --card-foreground: #f1f1f1;
+    --popover: #1c1c20;
+    --popover-foreground: #f1f1f1;
+    --primary: #a565ff;
+    --primary-foreground: #ffffff;
+    --secondary: #202024;
+    --secondary-foreground: #f1f1f1;
+    --muted: #202024;
+    --muted-foreground: #92939e;
+    --accent: #24243a;
+    --accent-foreground: #b3b2ff;
+    --destructive: #e5484d;
     --destructive-foreground: #ffffff;
-    --border: #2e2b27;
-    --input: #3a3733;
-    --ring: #7aa7e8;
-    --chart-1: #7aa7e8;
-    --chart-2: #36bab8;
-    --chart-3: #ed6d68;
-    --chart-4: #e5a057;
-    --chart-5: #bf89cd;
-    --sidebar: #171512;
-    --sidebar-foreground: #f5f5f5;
-    --sidebar-primary: #7aa7e8;
-    --sidebar-primary-foreground: #171512;
-    --sidebar-accent: #2a2724;
-    --sidebar-accent-foreground: #f5f5f5;
-    --sidebar-border: #2e2b27;
-    --sidebar-ring: #7aa7e8;
+    --border: #2a2a30;
+    --input: #34343c;
+    --ring: #a565ff;
+    --chart-1: #a565ff;
+    --chart-2: #8280ff;
+    --chart-3: #4c9a2a;
+    --chart-4: #7a4fc4;
+    --chart-5: #a3a396;
+    --sidebar: #18181b;
+    --sidebar-foreground: #f1f1f1;
+    --sidebar-primary: #a565ff;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #24243a;
+    --sidebar-accent-foreground: #b3b2ff;
+    --sidebar-border: #2a2a30;
+    --sidebar-ring: #a565ff;
 
     /* Mirrors foreground/muted-foreground/background/secondary so text set via
        the legacy Portal token names still inverts with the theme. */
-    --ink-black: #f5f5f5;
-    --graphite: #a8a29a;
-    --smoke: #a8a29a;
-    --paper-white: #171512;
-    --ash-mist: #2a2724;
+    --ink-black: #f1f1f1;
+    --graphite: #c7c7cf;
+    --smoke: #92939e;
+    --paper-white: #131316;
+    --ash-mist: #202024;
 }
 
 @layer base {

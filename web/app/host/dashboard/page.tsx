@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { toast } from "sonner"
 import { CalendarCheck, IndianRupee, Star } from "lucide-react"
 import { HostShell } from "@/components/features/host/host-shell"
 import { StatCard } from "@/components/features/host/stat-card"
@@ -46,6 +47,9 @@ export default function HostDashboardPage() {
     try {
       await publishProperty(id)
       reloadListings()
+      toast.success("Property published.")
+    } catch {
+      toast.error("Couldn't publish this property.")
     } finally {
       setMutatingId(null)
     }
@@ -56,6 +60,9 @@ export default function HostDashboardPage() {
     try {
       await unpublishProperty(id)
       reloadListings()
+      toast.success("Property unpublished.")
+    } catch {
+      toast.error("Couldn't unpublish this property.")
     } finally {
       setMutatingId(null)
     }

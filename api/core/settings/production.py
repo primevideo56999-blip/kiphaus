@@ -164,8 +164,9 @@ AUTH_COOKIE_DOMAIN = os.environ.get("AUTH_COOKIE_DOMAIN", "")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://www.kiphaus.com")
 
 # ── Social login (Google/Apple) — see users/social.py ─────────────────────────
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
-APPLE_CLIENT_ID  = os.environ.get("APPLE_CLIENT_ID", "")
+GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+APPLE_CLIENT_ID      = os.environ.get("APPLE_CLIENT_ID", "")
 
 # ── Cloudinary ────────────────────────────────────────────────────────────────
 # CLOUDINARY_STORAGE = {
@@ -191,14 +192,10 @@ STATIC_URL  = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# ── Email ─────────────────────────────────────────────────────────────────────
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.sendgrid.net"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "apikey"
-EMAIL_HOST_PASSWORD = os.environ.get("SENDGRID_API_KEY", "")
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@kiphaus.com")
+# ── Email (Resend — see notifications/email.py) ────────────────────────────────
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Kiphaus <onboarding@resend.dev>")
+SUPPORT_EMAIL = os.environ.get("SUPPORT_EMAIL", "support@kiphaus.com")
 
 # ── Security ──────────────────────────────────────────────────────────────────
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

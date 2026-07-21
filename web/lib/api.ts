@@ -858,3 +858,21 @@ export async function verifyPayment(input: { orderId: string; paymentId: string;
   })
   return { plan: data.plan, status: data.status, currentPeriodEnd: data.current_period_end }
 }
+
+/** Client-only, no auth needed (AllowAny) — the /contact page's "Send a message" form. */
+export async function sendContactMessage(input: {
+  name: string
+  email: string
+  subject: string
+  message: string
+}): Promise<void> {
+  const res = await fetch(`${API_URL}/api/v1/notifications/contact/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.detail ?? "Couldn't send your message. Please try again.")
+  }
+}

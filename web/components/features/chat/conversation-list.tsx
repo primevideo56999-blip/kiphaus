@@ -78,7 +78,7 @@ export function ConversationList({ basePath }: { basePath: string }) {
           onClick={() => setFilter("all")}
           className={cn(
             "rounded-full px-4 py-1.5 text-body-sm font-semibold tracking-body-sm transition-colors",
-            filter === "all" ? "bg-ink-black text-white" : "border border-border text-graphite hover:bg-ash-mist"
+            filter === "all" ? "bg-primary text-primary-foreground" : "border border-border text-graphite hover:bg-ash-mist"
           )}
         >
           All
@@ -88,7 +88,7 @@ export function ConversationList({ basePath }: { basePath: string }) {
           onClick={() => setFilter("unread")}
           className={cn(
             "rounded-full px-4 py-1.5 text-body-sm font-semibold tracking-body-sm transition-colors",
-            filter === "unread" ? "bg-ink-black text-white" : "border border-border text-graphite hover:bg-ash-mist"
+            filter === "unread" ? "bg-primary text-primary-foreground" : "border border-border text-graphite hover:bg-ash-mist"
           )}
         >
           Unread

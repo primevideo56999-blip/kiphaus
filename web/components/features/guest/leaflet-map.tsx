@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css"
 
 const markerIcon = L.divIcon({
   className: "",
-  html: `<svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.163 0 0 7.163 0 16c0 11 16 26 16 26s16-15 16-26C32 7.163 24.837 0 16 0z" fill="#518bdb"/><circle cx="16" cy="16" r="6" fill="#ffffff"/></svg>`,
+  html: `<svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.163 0 0 7.163 0 16c0 11 16 26 16 26s16-15 16-26C32 7.163 24.837 0 16 0z" fill="#a565ff"/><circle cx="16" cy="16" r="6" fill="#ffffff"/></svg>`,
   iconSize: [32, 42],
   iconAnchor: [16, 42],
 })

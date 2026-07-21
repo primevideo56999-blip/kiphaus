@@ -15,7 +15,7 @@ declare global {
             client_id: string
             callback: (resp: { credential: string }) => void
           }) => void
-          renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void
+          prompt: () => void
         }
       }
     }
@@ -33,10 +33,11 @@ interface SocialAuthButtonsProps {
   onError: (message: string) => void
 }
 
+const socialButtonClass =
+  "rounded-full h-10 hover:bg-ash-mist hover:border-graphite/30 transition-colors font-medium text-ink-black text-body-sm shadow-none"
+
 export function SocialAuthButtons({ onSuccess, onError }: SocialAuthButtonsProps) {
   const { loginWithGoogle, loginWithApple } = useAuth()
-  const googleButtonRef = React.useRef<HTMLDivElement>(null)
-  const [googleReady, setGoogleReady] = React.useState(false)
 
   const handleGoogleCredential = React.useCallback(
     async (credential: string) => {
@@ -59,38 +60,39 @@ export function SocialAuthButtons({ onSuccess, onError }: SocialAuthButtonsProps
     }
   }, [loginWithApple, onSuccess, onError])
 
-  const initGoogleButton = React.useCallback(() => {
+  const initGoogle = React.useCallback(() => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-    if (!clientId || !window.google || !googleButtonRef.current) return
+    if (!clientId || !window.google) return
     window.google.accounts.id.initialize({
       client_id: clientId,
       callback: (resp) => handleGoogleCredential(resp.credential),
     })
-    window.google.accounts.id.renderButton(googleButtonRef.current, {
-      type: "standard",
-      shape: "pill",
-      theme: "outline",
-      size: "large",
-      text: "continue_with",
-      width: 260,
-    })
-    setGoogleReady(true)
   }, [handleGoogleCredential])
 
   React.useEffect(() => {
     // next/script dedupes by src app-wide, so onLoad only fires once per
     // session. On a page navigated to after the GSI script already loaded
-    // elsewhere, render into this page's button directly instead of
-    // waiting for an onLoad that will never fire again.
-    if (window.google) initGoogleButton()
-  }, [initGoogleButton])
+    // elsewhere, initialize directly instead of waiting for an onLoad that
+    // will never fire again.
+    if (window.google) initGoogle()
+  }, [initGoogle])
+
+  const handleGoogleClick = React.useCallback(() => {
+    if (!window.google) return
+    // Same id_token flow as Google's own rendered button (google.accounts.id,
+    // verified server-side by verify_oauth2_token) — prompt() lets it be
+    // triggered from a normal styled button instead of Google's cross-origin
+    // iframe button, which can't be clicked programmatically to match
+    // Apple's button here.
+    window.google.accounts.id.prompt()
+  }, [])
 
   return (
     <>
       <Script
         src="https://accounts.google.com/gsi/client"
         strategy="afterInteractive"
-        onLoad={initGoogleButton}
+        onLoad={initGoogle}
       />
       <Script
         src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
@@ -113,22 +115,32 @@ export function SocialAuthButtons({ onSuccess, onError }: SocialAuthButtonsProps
         <div className="flex-1 border-t border-border"></div>
       </div>
 
-      <div className={`grid gap-3 items-center ${googleReady ? "grid-cols-2" : "grid-cols-1"}`}>
+      <div className="grid grid-cols-2 gap-3 items-center">
         <Button
           type="button"
           variant="outline"
           onClick={handleAppleClick}
-          className="rounded-full h-[50px] bg-ash-mist border-transparent hover:bg-ash-mist hover:border-graphite/30 transition-colors font-semibold text-ink-black text-body shadow-none"
+          className={socialButtonClass}
         >
           <svg className="size-5" viewBox="0 0 24 24" fill="currentColor">
             <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.09 2.31-.86 3.59-.8 1.51.05 2.53.72 3.26 1.84-2.88 1.62-2.39 5.61.34 6.74-.63 1.6-1.57 3.32-2.27 4.39zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.02 4.41-3.74 4.25z" />
           </svg>
           Apple
         </Button>
-        <div
-          ref={googleButtonRef}
-          className={`flex justify-center [&>div]:w-full ${googleReady ? "" : "hidden"}`}
-        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleGoogleClick}
+          className={socialButtonClass}
+        >
+          <svg className="size-5" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+          </svg>
+          Google
+        </Button>
       </div>
     </>
   )

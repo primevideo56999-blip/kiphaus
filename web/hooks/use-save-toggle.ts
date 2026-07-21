@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { toast } from "sonner"
 import { useAuth } from "./use-auth"
 import { toggleWishlist } from "@/lib/api"
 
@@ -16,7 +17,7 @@ export function useSaveToggle(propertyId: string) {
       try {
         setSaved(await toggleWishlist(propertyId))
       } catch {
-        // ponytail: best-effort — leave state unchanged, user can just click again
+        toast.error("Couldn't update wishlist. Try again.")
       }
     })
   }

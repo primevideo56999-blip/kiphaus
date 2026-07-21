@@ -46,7 +46,7 @@ export function WhatsAppGateModal({
           <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button render={<Link href="/login" />}>Log in</Button>
+          <Button render={<Link href="/login" />} nativeButton={false}>Log in</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
