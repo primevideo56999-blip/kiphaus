@@ -155,6 +155,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://kiphaus.vercel.app",
 ]
 
+CORS_URLS_REGEX = r"^/api/.*$"
+
 # ── Auth cookie / frontend link config ────────────────────────────────────────
 AUTH_COOKIE_DOMAIN = os.environ.get("AUTH_COOKIE_DOMAIN", "")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://www.kiphaus.com")
