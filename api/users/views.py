@@ -97,14 +97,14 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # try:
-        #     user = serializer.save()
-        # except Exception as e:
-        #     return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
-            _send_verification_email(user)
+            user = serializer.save()
         except Exception as e:
-            print(f"Email error: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # try:
+        #     _send_verification_email(user)
+        # except Exception as e:
+        #     print(f"Email error: {e}")
         refresh = RefreshToken.for_user(user)
         response = Response({
             "user":   UserSerializer(user).data,
