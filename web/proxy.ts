@@ -3,11 +3,13 @@ import type { NextRequest } from "next/server"
 
 // Cheap presence check only — real enforcement is Django rejecting
 // unauthenticated/wrong-role API calls regardless of what this proxy does.
-// "kh_refresh" is the httpOnly JWT refresh cookie set by the Django API on
-// login/register (see api/users/views.py) — the access token itself lives in
-// memory on the client and is never visible here.
+// Checks "kh_session", a first-party marker cookie (see setSessionMarker in
+// web/lib/auth.ts) — NOT the API's httpOnly "kh_refresh" cookie, which is
+// scoped to the API's own hostname and, in production (separate Render
+// services, no shared parent domain), never reaches this frontend server at
+// all.
 export function proxy(req: NextRequest) {
-  const hasSession = req.cookies.has("kh_refresh")
+  const hasSession = req.cookies.has("kh_session")
   if (!hasSession) {
     return NextResponse.redirect(new URL("/login", req.url))
   }

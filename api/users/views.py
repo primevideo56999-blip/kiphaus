@@ -51,13 +51,18 @@ def _cookie_domain():
 
 
 def _set_refresh_cookie(response, refresh_token: str):
+    # Frontend and API are on different hostnames in production (separate Render
+    # services, no shared parent domain) — a cross-site fetch() only carries this
+    # cookie if SameSite=None, which itself requires Secure. Locally both run on
+    # "localhost" (same-site, different port only), so Lax is fine there and lets
+    # the cookie work over plain http in dev (Secure is false when DEBUG=True).
     response.set_cookie(
         REFRESH_COOKIE_NAME,
         str(refresh_token),
         max_age=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
         httponly=True,
         secure=not settings.DEBUG,
-        samesite="Lax",
+        samesite="Lax" if settings.DEBUG else "None",
         domain=_cookie_domain(),
         path="/",
     )

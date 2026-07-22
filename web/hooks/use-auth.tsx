@@ -10,6 +10,8 @@ import {
   logout as apiLogout,
   register as apiRegister,
   restoreSession,
+  clearSessionMarker,
+  setSessionMarker,
   updateAvatar as apiUpdateAvatar,
   updateProfile as apiUpdateProfile,
   type AuthUser,
@@ -40,6 +42,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(setUser)
       .finally(() => setIsLoading(false))
   }, [])
+
+  // Keeps proxy.ts's cheap presence check in sync — see setSessionMarker's
+  // doc comment for why this can't just read the API's httpOnly cookie.
+  React.useEffect(() => {
+    if (user) setSessionMarker()
+    else clearSessionMarker()
+  }, [user])
 
   const login = React.useCallback(async (email: string, password: string) => {
     const loggedInUser = await apiLogin(email, password)

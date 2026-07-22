@@ -42,6 +42,23 @@ function setAccessToken(token: string | null) {
   accessToken = token
 }
 
+// First-party marker cookie for proxy.ts's presence check. The real kh_refresh
+// cookie is httpOnly and set by the API, which is a different hostname than the
+// frontend in production (separate Render services, no shared parent domain) —
+// middleware running on the frontend server never sees it. This cookie holds no
+// token, just tracks "was a login/session-restore successful," set from the one
+// place (AuthProvider) that already knows.
+const SESSION_MARKER = "kh_session"
+const SESSION_MARKER_MAX_AGE = 60 * 60 * 24 * 7 // matches SIMPLE_JWT REFRESH_TOKEN_LIFETIME
+
+export function setSessionMarker() {
+  document.cookie = `${SESSION_MARKER}=1; path=/; max-age=${SESSION_MARKER_MAX_AGE}; samesite=lax`
+}
+
+export function clearSessionMarker() {
+  document.cookie = `${SESSION_MARKER}=; path=/; max-age=0; samesite=lax`
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 async function rawFetch(path: string, opts: RequestInit = {}) {
