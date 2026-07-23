@@ -18,6 +18,7 @@ export interface AuthUser {
   avatar: string | null
   bio: string
   is_verified: boolean
+  email_verified: boolean
   created_at: string
 }
 
@@ -162,6 +163,7 @@ export async function register(input: {
   password2: string
   username: string
   first_name?: string
+  role?: "guest" | "host"
 }): Promise<AuthUser> {
   const data = await apiFetch("/api/v1/auth/register/", {
     method: "POST",
@@ -171,9 +173,12 @@ export async function register(input: {
       first_name: input.first_name,
       password: input.password1,
       password2: input.password2,
+      role: input.role ?? "guest",
     }),
   }, false)
-  setAccessToken(data.access)
+  if (data.access) {
+    setAccessToken(data.access)
+  }
   return data.user as AuthUser
 }
 
@@ -206,10 +211,22 @@ export async function logout(): Promise<void> {
 /** Silently restores the session after a page reload (access token is memory-only). Never throws. */
 export async function restoreSession(): Promise<AuthUser | null> {
   const refreshed = await refreshAccessToken()
-  if (!refreshed) return null
+  if (!refreshed) {
+    clearSessionMarker()
+    setAccessToken(null)
+    return null
+  }
   try {
-    return await getCurrentUser()
+    const user = await getCurrentUser()
+    if (!user.email_verified) {
+      clearSessionMarker()
+      setAccessToken(null)
+      return null
+    }
+    return user
   } catch {
+    clearSessionMarker()
+    setAccessToken(null)
     return null
   }
 }

@@ -86,7 +86,7 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "floating" }
 
         <nav className="hidden flex-1 items-center justify-center md:flex">
           <AnimatePresence mode="wait" initial={false}>
-            {showCompactSearch ? (
+                {showCompactSearch ? (
               <motion.div
                 key="compact-search"
                 initial={{ opacity: 0, y: -6, scale: 0.97 }}
@@ -111,15 +111,18 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "floating" }
                 transition={{ duration: 0.15 }}
                 className="flex items-center gap-1"
               >
-                {NAV_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="rounded-full px-4 py-2 text-body-sm font-semibold text-graphite tracking-body-sm transition-colors hover:bg-ash-mist hover:text-ink-black"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                <Link
+                  href="/s"
+                  className="rounded-full px-4 py-2 text-body-sm font-semibold text-graphite tracking-body-sm transition-colors hover:bg-ash-mist hover:text-ink-black"
+                >
+                  Explore stays
+                </Link>
+                <Link
+                  href={user?.role === "host" ? "/host/dashboard" : user ? "/host/onboarding" : "/host"}
+                  className="rounded-full px-4 py-2 text-body-sm font-semibold text-graphite tracking-body-sm transition-colors hover:bg-ash-mist hover:text-ink-black"
+                >
+                  {user?.role === "host" ? "Switch to host view" : user ? "Become a host" : "Kiphaus your home"}
+                </Link>
               </motion.div>
             )}
           </AnimatePresence>
@@ -185,7 +188,11 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "floating" }
                   <DropdownMenuSeparator />
                   <DropdownMenuItem render={<Link href="/contact" />}>Help Centre</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem render={<Link href="/host" />}>Kiphaus your home</DropdownMenuItem>
+                  {user.role === "host" ? (
+                    <DropdownMenuItem render={<Link href="/host/dashboard" />}>Switch to host view</DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem render={<Link href="/host/onboarding" />}>Become a host</DropdownMenuItem>
+                  )}
                 </>
               ) : (
                 <>

@@ -3,15 +3,40 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type { ReactNode } from "react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { Laptop, Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
 import { FadeIn } from "@/components/motion/fade-in"
 import { LogoMark } from "@/components/shared/logo"
 import { HostNav } from "@/components/features/host/host-nav"
 import { useAuth } from "@/hooks"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+const THEME_OPTIONS = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "system", label: "System", icon: Laptop },
+  { value: "dark", label: "Dark", icon: Moon },
+] as const
 
 export function HostShell({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth()
+  const [mounted, setMounted] = useState(false)
+  const { user, isLoading, logout } = useAuth()
+  const { theme, setTheme } = useTheme()
   const router = useRouter()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (isLoading) return
@@ -21,6 +46,11 @@ export function HostShell({ children }: { children: ReactNode }) {
       router.replace("/host/onboarding")
     }
   }, [isLoading, user, router])
+
+  const handleLogout = async () => {
+    await logout()
+    router.push("/")
+  }
 
   if (isLoading || !user || user.role !== "host") {
     return null
@@ -38,13 +68,61 @@ export function HostShell({ children }: { children: ReactNode }) {
               </span>
             </Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/s" className="text-body-sm font-semibold text-graphite tracking-body-sm hover:text-ink-black">
+
+          <nav className="hidden flex-1 items-center justify-center md:flex">
+            <Link
+              href="/s"
+              className="rounded-full px-4 py-2 text-body-sm font-semibold text-graphite tracking-body-sm transition-colors hover:bg-ash-mist hover:text-ink-black"
+            >
               Switch to guest view
             </Link>
-            <div className="flex size-9 items-center justify-center rounded-full bg-ash-mist text-body-sm font-semibold text-graphite">
-              {user?.full_name.charAt(0) ?? "…"}
-            </div>
+          </nav>
+
+          <div className="flex items-center gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label="Account menu"
+                className="flex size-9 items-center justify-center rounded-full text-graphite outline-none transition-colors hover:bg-ash-mist"
+              >
+                <Avatar size="sm">
+                  {user.avatar && <AvatarImage src={user.avatar} alt={user.full_name} />}
+                  <AvatarFallback>{user.full_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 p-4">
+                <DropdownMenuItem render={<Link href="/host/messages" />}>Messages</DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/account" />}>Account</DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/contact" />}>Help Centre</DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/s" />}>Switch to guest view</DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                  <div className="px-2 pb-2">
+                    {mounted && (
+                      <ToggleGroup
+                        value={theme ? [theme] : ["system"]}
+                        onValueChange={(values) => {
+                          if (values[0]) setTheme(values[0])
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+                          <ToggleGroupItem key={value} value={value} aria-label={label} className="flex-1">
+                            <Icon className="size-4" />
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                    )}
+                  </div>
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         <div className="mx-auto max-w-6xl px-4 pb-4 sm:px-6 lg:px-8">

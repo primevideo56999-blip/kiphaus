@@ -27,16 +27,16 @@ function VerifyEmailConfirm({ uid, token }: { uid: string; token: string }) {
         </h1>
         <p className="text-smoke text-body leading-body tracking-body max-w-[300px] mx-auto">
           {status === "checking" && "Hang on a moment."}
-          {status === "done" && "Your email address is confirmed."}
+          {status === "done" && "Your email address is confirmed. You can now log in to your account."}
           {status === "error" && error}
         </p>
       </div>
       {status !== "checking" && (
         <Link
-          href="/"
+          href="/login"
           className="inline-flex w-full items-center justify-center rounded-full h-[50px] bg-primary hover:bg-primary/90 transition-colors text-primary-foreground text-body font-semibold"
         >
-          Continue
+          {status === "done" ? "Log in to your account" : "Back to log in"}
         </Link>
       )}
     </div>

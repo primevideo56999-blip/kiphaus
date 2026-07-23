@@ -3,6 +3,7 @@
 import { useState, type SubmitEvent } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { Home, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,10 +13,12 @@ import { StaggerList, StaggerItem } from "@/components/motion/stagger-list"
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons"
 import { useAuth } from "@/hooks"
 import { AuthError } from "@/lib/auth"
+import { cn } from "@/lib/utils"
 
 export default function SignupPage() {
   const router = useRouter()
   const { register } = useAuth()
+  const [role, setRole] = useState<"guest" | "host">("guest")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -40,6 +43,7 @@ export default function SignupPage() {
         password1: password,
         password2: confirmPassword,
         first_name: name,
+        role,
       })
       router.push("/verify")
     } catch (err) {
@@ -65,6 +69,39 @@ export default function SignupPage() {
               <p role="alert" className="text-body-sm text-destructive text-center">{error}</p>
             </StaggerItem>
           )}
+          <StaggerItem>
+            <div className="space-y-2">
+              <Label className="text-body-sm font-medium text-graphite tracking-body-sm">I want to join as</Label>
+              <div className="grid grid-cols-2 gap-2.5 p-1 rounded-full border border-border bg-ash-mist/50">
+                <button
+                  type="button"
+                  onClick={() => setRole("guest")}
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-full py-2.5 px-4 text-body-sm font-semibold transition-all duration-200 cursor-pointer",
+                    role === "guest"
+                      ? "bg-white text-ink-black shadow-sm dark:bg-black"
+                      : "text-graphite hover:text-ink-black"
+                  )}
+                >
+                  <User className="size-4 shrink-0" />
+                  <span>Guest</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("host")}
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-full py-2.5 px-4 text-body-sm font-semibold transition-all duration-200 cursor-pointer",
+                    role === "host"
+                      ? "bg-white text-ink-black shadow-sm dark:bg-black"
+                      : "text-graphite hover:text-ink-black"
+                  )}
+                >
+                  <Home className="size-4 shrink-0" />
+                  <span>Host</span>
+                </button>
+              </div>
+            </div>
+          </StaggerItem>
           <StaggerItem>
             <div className="space-y-2">
               <Label htmlFor="name" className="text-body-sm font-medium text-graphite tracking-body-sm">Name</Label>
@@ -123,7 +160,7 @@ export default function SignupPage() {
           <StaggerItem>
             <div className="pt-3 space-y-3">
               <Button type="submit" disabled={isSubmitting} className="w-full rounded-full h-[50px] bg-primary hover:bg-primary/90 text-primary-foreground text-body font-semibold">
-                {isSubmitting ? "Signing up..." : "Sign up"}
+                {isSubmitting ? "Signing up..." : role === "host" ? "Sign up as Host" : "Sign up as Guest"}
               </Button>
               <p className="text-body-sm text-smoke text-center tracking-body-sm">
                 By continuing, you agree to Kiphaus&apos;s{" "}

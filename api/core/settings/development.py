@@ -10,3 +10,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # Disable HTTPS redirects locally
 SECURE_SSL_REDIRECT = False
+
+# Use console email backend in dev if SMTP credentials are not configured
+if not env("EMAIL_HOST_USER", default=""):
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

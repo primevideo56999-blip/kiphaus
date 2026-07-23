@@ -3,23 +3,28 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-
-const NAV_ITEMS = [
-  { href: "/trips", label: "Trips" },
-  { href: "/wishlists", label: "Wishlists" },
-  { href: "/messages", label: "Messages" },
-  { href: "/account", label: "Account" },
-]
+import { useAuth } from "@/hooks"
 
 export function AccountNav() {
   const pathname = usePathname()
+  const { user } = useAuth()
+
+  const navItems = [
+    { href: "/trips", label: "Trips" },
+    { href: "/wishlists", label: "Wishlists" },
+    { href: "/messages", label: "Messages" },
+    { href: "/account", label: "Account" },
+    user?.role === "host"
+      ? { href: "/host/dashboard", label: "Switch to host view" }
+      : { href: "/host/onboarding", label: "Become a host" },
+  ]
 
   return (
     <nav
       aria-label="Account navigation"
       className="flex gap-2 overflow-x-auto pb-2 md:w-56 md:shrink-0 md:flex-col md:overflow-visible md:pb-0"
     >
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         const active = pathname === item.href
         return (
           <Link
@@ -40,3 +45,4 @@ export function AccountNav() {
     </nav>
   )
 }
+

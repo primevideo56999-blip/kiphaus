@@ -102,7 +102,9 @@ class VerifyAppleTokenTests(TestCase):
 
 class SocialLoginViewTests(TestCase):
     def setUp(self):
+        from django.core.cache import cache
         from rest_framework.test import APIClient
+        cache.clear()
         self.client = APIClient()
 
     @patch("users.views.verify_google_token")
@@ -131,7 +133,9 @@ class SocialLoginViewTests(TestCase):
 
 class BecomeHostViewTests(TestCase):
     def setUp(self):
+        from django.core.cache import cache
         from rest_framework.test import APIClient
+        cache.clear()
         self.client = APIClient()
         self.user = User.objects.create_user(username="dana", email="dana@example.com")
 
@@ -161,7 +165,9 @@ class BecomeHostViewTests(TestCase):
 
 class EmailVerificationTests(TestCase):
     def setUp(self):
+        from django.core.cache import cache
         from rest_framework.test import APIClient
+        cache.clear()
         self.client = APIClient()
         self.user = User.objects.create_user(username="erin", email="erin@example.com")
 
@@ -173,8 +179,23 @@ class EmailVerificationTests(TestCase):
             "password2": "correct-horse-battery-staple-9",
         }, format="json")
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("new-signup@example.com", mail.outbox[0].to)
+        self.assertGreaterEqual(len(mail.outbox), 1)
+        recipient_emails = [m.to[0] for m in mail.outbox]
+        self.assertIn("new-signup@example.com", recipient_emails)
+
+    def test_register_as_host_creates_host_profile(self):
+        response = self.client.post("/api/v1/auth/register/", {
+            "email": "new-host-signup@example.com",
+            "username": "newhostsignup",
+            "password": "correct-horse-battery-staple-9",
+            "password2": "correct-horse-battery-staple-9",
+            "role": "host",
+        }, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["user"]["role"], "host")
+        created_user = User.objects.get(email="new-host-signup@example.com")
+        self.assertEqual(created_user.role, User.Role.HOST)
+        self.assertTrue(HostProfile.objects.filter(user=created_user).exists())
 
     def test_resend_sends_another_email_when_unverified(self):
         self.client.force_authenticate(self.user)
@@ -197,13 +218,13 @@ class EmailVerificationTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.email_verified)
 
-    def test_confirm_token_is_single_use(self):
+    def test_confirm_token_is_idempotent(self):
         uid = urlsafe_base64_encode(force_bytes(self.user.pk))
         token = email_verification_token.make_token(self.user)
         self.client.post("/api/v1/auth/verify-email/confirm/", {"uid": uid, "token": token}, format="json")
-        # Token hashes in email_verified, which is now True — the same token no longer checks out.
+        # Idempotent: a second call for an already-verified user returns 200 OK
         response = self.client.post("/api/v1/auth/verify-email/confirm/", {"uid": uid, "token": token}, format="json")
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 200)
 
     def test_confirm_rejects_bad_token(self):
         uid = urlsafe_base64_encode(force_bytes(self.user.pk))

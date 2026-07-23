@@ -81,10 +81,14 @@ def resolve_social_user(provider: str, sub: str, email: str | None) -> User:
             username=_generate_unique_username(email),
             email=email,
             role=User.Role.GUEST,
+            email_verified=True,
             is_verified=True,
         )
         from notifications.email import send_welcome_email
         send_welcome_email(user)
+    elif not user.email_verified:
+        user.email_verified = True
+        user.save(update_fields=["email_verified"])
 
     SocialAccount.objects.create(user=user, provider=provider, provider_user_id=sub, email=email)
     return user

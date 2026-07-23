@@ -172,6 +172,29 @@ export default function GuestAccountPage() {
 
             <Separator />
 
+            <FadeIn inView={false} delay={0.12}>
+              <section aria-labelledby="hosting-section">
+                <h2 id="hosting-section" className="text-heading-sm font-semibold text-ink-black leading-heading-sm">
+                  Hosting & Mode
+                </h2>
+                <p className="mt-1 text-body-sm text-smoke tracking-body-sm">
+                  {user?.role === "host"
+                    ? "You are registered as a host. Switch to your host dashboard to manage properties, bookings, and verification."
+                    : "Earn by listing your homestay or villa on Kiphaus with zero commission."}
+                </p>
+                <div className="mt-4">
+                  <Button
+                    onClick={() => router.push(user?.role === "host" ? "/host/dashboard" : "/host/onboarding")}
+                    className="rounded-full h-[50px] px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                  >
+                    {user?.role === "host" ? "Switch to host view" : "Become a host"}
+                  </Button>
+                </div>
+              </section>
+            </FadeIn>
+
+            <Separator />
+
             <FadeIn inView={false} delay={0.15}>
               <section>
                 {user && (

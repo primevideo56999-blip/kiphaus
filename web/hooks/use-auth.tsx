@@ -39,7 +39,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     restoreSession()
-      .then(setUser)
+      .then((u) => {
+        if (u && !u.email_verified) {
+          setUser(null)
+          apiLogout()
+        } else {
+          setUser(u)
+        }
+      })
       .finally(() => setIsLoading(false))
   }, [])
 

@@ -37,7 +37,7 @@ class PropertyViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == "create":
-            return [permissions.IsAuthenticated(), IsHost(), IsHostProfileComplete()]
+            return [permissions.IsAuthenticated(), IsHost()]
         return super().get_permissions()
 
     def get_serializer_class(self):

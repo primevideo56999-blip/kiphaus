@@ -1,46 +1,51 @@
-"""Central Resend send path — every transactional email in the app goes
-through here so there's exactly one place that touches the Resend API."""
+"""Central email send path — every transactional email in the app goes
+through here using Django's configured mail backend (Gmail SMTP)."""
 
 import logging
 
-import resend
 from django.conf import settings
+from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
 
 
-def _send_via_resend(subject, to, text, idempotency_key=None, reply_to=None):
-    """Never raises — a failed email must not break the request/task that
-    triggered it. Returns the Resend response dict, or None on failure."""
-    resend.api_key = settings.RESEND_API_KEY
+def _send_via_email(subject, to, text, idempotency_key=None, reply_to=None):
+    """Sends email via Django's configured mail backend (Gmail SMTP, console, etc.).
+    Never raises — a failed email must not break the request/task that triggered it."""
+    # Print to console for easy local development & debugging
+    print(f"\n==================== 📧 OUTGOING EMAIL TO {to} ====================", flush=True)
+    print(f"Subject: {subject}", flush=True)
+    print(f"Body:\n{text}", flush=True)
+    print("=========================================================\n", flush=True)
+    logger.info("Outgoing email to %s | subject=%s", to, subject)
+
     try:
-        params = {
-            "from": settings.DEFAULT_FROM_EMAIL,
-            "to": [to],
-            "subject": subject,
-            "text": text,
-        }
-        if reply_to:
-            params["reply_to"] = reply_to
-        options = {"idempotency_key": idempotency_key} if idempotency_key else None
-        return resend.Emails.send(params, options)
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", settings.EMAIL_HOST_USER or "Kiphaus <noreply@kiphaus.com>")
+        send_mail(
+            subject=subject,
+            message=text,
+            from_email=from_email,
+            recipient_list=[to],
+            fail_silently=False,
+        )
+        return True
     except Exception as exc:
-        logger.error("Email send failed | to=%s | subject=%s | %s", to, subject, exc)
+        logger.warning("Django send_mail exception: %s", exc)
         return None
 
 
 def send_email(subject, to, template, context=None, idempotency_key=None):
-    """Renders a notifications/ text template and sends it via Resend."""
+    """Renders a notifications/ text template and sends it via Django mail system."""
     body = render_to_string(template, context or {})
-    return _send_via_resend(subject, to, body, idempotency_key)
+    return _send_via_email(subject, to, body, idempotency_key)
 
 
 def send_raw_email(subject, to, text, idempotency_key=None, reply_to=None):
     """Sends a plain-text body directly, no template — for one-off
     transactional emails (verification links, password resets) that don't
     warrant their own template file."""
-    return _send_via_resend(subject, to, text, idempotency_key, reply_to)
+    return _send_via_email(subject, to, text, idempotency_key, reply_to)
 
 
 def send_welcome_email(user):

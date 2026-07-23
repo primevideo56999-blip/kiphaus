@@ -3,7 +3,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
-from rest_framework import generics, status
+from rest_framework import generics, serializers, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
@@ -73,9 +73,14 @@ def _clear_refresh_cookie(response):
 
 
 class CustomTokenSerializer(TokenObtainPairSerializer):
-    """Add user info to login response."""
+    """Add user info to login response and block unverified users from logging in."""
     def validate(self, attrs):
         data = super().validate(attrs)
+        if not self.user.email_verified:
+            _send_verification_email(self.user)
+            raise serializers.ValidationError({
+                "detail": "Your email address is not verified. A new verification link has been sent to your email. Please check your inbox or logs."
+            })
         data["user"] = UserSerializer(self.user).data
         return data
 
@@ -109,13 +114,11 @@ class RegisterView(generics.CreateAPIView):
             _send_verification_email(user)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        refresh = RefreshToken.for_user(user)
-        response = Response({
+
+        return Response({
             "user":   UserSerializer(user).data,
-            "access": str(refresh.access_token),
+            "detail": "Account created. Please check your email to verify your account before logging in.",
         }, status=status.HTTP_201_CREATED)
-        _set_refresh_cookie(response, str(refresh))
-        return response
 
 
 class VerifyEmailResendView(APIView):
@@ -143,13 +146,21 @@ class VerifyEmailConfirmView(APIView):
         except (User.DoesNotExist, ValueError, TypeError, OverflowError):
             return Response({"detail": "This verification link is invalid or has expired."}, status=status.HTTP_400_BAD_REQUEST)
 
+        if user.email_verified:
+            return Response({
+                "detail": "Email verified.",
+                "user": UserSerializer(user).data,
+            })
+
         if not email_verification_token.check_token(user, data["token"]):
             return Response({"detail": "This verification link is invalid or has expired."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not user.email_verified:
-            user.email_verified = True
-            user.save(update_fields=["email_verified"])
-        return Response({"detail": "Email verified."})
+        user.email_verified = True
+        user.save(update_fields=["email_verified"])
+        return Response({
+            "detail": "Email verified.",
+            "user": UserSerializer(user).data,
+        })
 
 
 class CookieTokenRefreshView(TokenRefreshView):
@@ -159,20 +170,31 @@ class CookieTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.data.get("refresh") or request.COOKIES.get(REFRESH_COOKIE_NAME)
         if not refresh_token:
-            return Response({"detail": "No refresh token provided."}, status=status.HTTP_401_UNAUTHORIZED)
+            response = Response({"detail": "No refresh token provided."}, status=status.HTTP_401_UNAUTHORIZED)
+            _clear_refresh_cookie(response)
+            return response
+
+        # Check if user is email verified BEFORE serializer validates and blacklists/rotates token
+        try:
+            from rest_framework_simplejwt.tokens import UntypedToken
+            untyped = UntypedToken(refresh_token)
+            user_id = untyped.get("user_id")
+            if user_id:
+                user = User.objects.get(pk=user_id)
+                if not user.email_verified:
+                    response = Response({"detail": "Please verify your email address before logging in."}, status=status.HTTP_401_UNAUTHORIZED)
+                    _clear_refresh_cookie(response)
+                    return response
+        except Exception:
+            pass
 
         serializer = self.get_serializer(data={"refresh": refresh_token})
         try:
             serializer.is_valid(raise_exception=True)
         except (TokenError, InvalidToken):
-            # Don't clear the cookie here: with ROTATE_REFRESH_TOKENS +
-            # BLACKLIST_AFTER_ROTATION, a second concurrent refresh call (two
-            # tabs, a stale restoreSession() racing a fresh login) reuses an
-            # already-rotated token and lands here even though the session is
-            # still good — clearing would delete the cookie a sibling request
-            # just legitimately set. A dead cookie is harmless: it just keeps
-            # 401ing until logout or natural expiry overwrites it.
-            return Response({"detail": "Refresh token invalid or expired."}, status=status.HTTP_401_UNAUTHORIZED)
+            response = Response({"detail": "Refresh token invalid or expired."}, status=status.HTTP_401_UNAUTHORIZED)
+            _clear_refresh_cookie(response)
+            return response
 
         data = serializer.validated_data
         response = Response({"access": data["access"]}, status=status.HTTP_200_OK)
@@ -203,7 +225,11 @@ class MeView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        if not user.email_verified:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Your email address is not verified. Please verify your email address before proceeding.")
+        return user
 
 
 class BecomeHostView(APIView):
