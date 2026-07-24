@@ -31,4 +31,4 @@ EXPOSE 8000
 ENTRYPOINT ["/app/entrypoint.sh"]
 # Overridden by docker-compose for dev (runserver) / celery services.
 # Production default: gunicorn, settings picked up from $DJANGO_SETTINGS_MODULE.
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "2", "--timeout", "120"]
