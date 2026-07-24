@@ -210,6 +210,10 @@ export async function logout(): Promise<void> {
 
 /** Silently restores the session after a page reload (access token is memory-only). Never throws. */
 export async function restoreSession(): Promise<AuthUser | null> {
+  if (typeof document !== "undefined" && !document.cookie.includes(`${SESSION_MARKER}=1`)) {
+    setAccessToken(null)
+    return null
+  }
   const refreshed = await refreshAccessToken()
   if (!refreshed) {
     clearSessionMarker()
@@ -278,9 +282,12 @@ export function confirmPasswordReset(input: {
   }, false)
 }
 
-/** Signed-in only — resends to the current user's own email. */
-export function resendVerificationEmail(): Promise<{ detail: string }> {
-  return apiFetch("/api/v1/auth/verify-email/resend/", { method: "POST" })
+/** Resends email verification link to current user session or specified email address. */
+export function resendVerificationEmail(email?: string): Promise<{ detail: string }> {
+  return apiFetch("/api/v1/auth/verify-email/resend/", {
+    method: "POST",
+    body: JSON.stringify(email ? { email } : {}),
+  }, false)
 }
 
 /** No session required — reachable from a cold email-link click. */

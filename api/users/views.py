@@ -122,12 +122,24 @@ class RegisterView(generics.CreateAPIView):
 
 
 class VerifyEmailResendView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     throttle_classes   = [AuthRateThrottle]
 
     def post(self, request):
-        if not request.user.email_verified:
-            _send_verification_email(request.user)
+        email = request.data.get("email")
+        if request.user and request.user.is_authenticated:
+            user = request.user
+        elif email:
+            user = User.objects.filter(email__iexact=str(email).strip()).first()
+        else:
+            return Response(
+                {"detail": "Email address or authenticated session is required to resend verification link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if user and not user.email_verified:
+            _send_verification_email(user)
+
         return Response({"detail": "If your email isn't verified yet, a new link has been sent."})
 
 
