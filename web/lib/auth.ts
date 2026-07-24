@@ -78,9 +78,13 @@ async function rawFetch(path: string, opts: RequestInit = {}) {
 
 async function throwAuthError(res: Response): Promise<never> {
   const body = await res.json().catch(() => null)
+  const detail = body?.detail
+  const nonField = body?.non_field_errors
   const message =
-    body?.detail ??
-    body?.non_field_errors?.[0] ??
+    typeof detail === "string" ? detail :
+    Array.isArray(detail) && typeof detail[0] === "string" ? detail[0] :
+    Array.isArray(nonField) && typeof nonField[0] === "string" ? nonField[0] :
+    typeof nonField === "string" ? nonField :
     "Something went wrong. Please try again."
   throw new AuthError(res.status, message, body ?? null)
 }

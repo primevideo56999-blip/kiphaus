@@ -74,6 +74,11 @@ class CustomTokenSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         if not self.user.email_verified:
             link = _send_verification_email(self.user)
+            if not link:
+                uid = urlsafe_base64_encode(force_bytes(self.user.pk))
+                token = email_verification_token.make_token(self.user)
+                frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
+                link = f"{frontend_url}/verify?uid={uid}&token={token}"
             raise serializers.ValidationError({
                 "detail": "Your email address is not verified.",
                 "verification_url": link,
