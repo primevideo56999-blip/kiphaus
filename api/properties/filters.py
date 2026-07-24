@@ -1,3 +1,4 @@
+from django.db import models
 import django_filters
 from .models import Property
 
@@ -14,7 +15,7 @@ class PropertyFilter(django_filters.FilterSet):
     min_bathrooms=django_filters.NumberFilter(field_name="bathrooms",   lookup_expr="gte")
 
     # Location
-    city        = django_filters.CharFilter(lookup_expr="icontains")
+    city        = django_filters.CharFilter(method="filter_location")
     country     = django_filters.CharFilter(lookup_expr="icontains")
 
     # Type
@@ -29,6 +30,22 @@ class PropertyFilter(django_filters.FilterSet):
 
     # Amenities
     amenities   = django_filters.BaseInFilter(field_name="amenities__id", lookup_expr="in")
+
+    def filter_location(self, queryset, name, value):
+        if not value or not value.strip():
+            return queryset
+        val = value.strip()
+        if val.lower().startswith("all "):
+            val = val[4:].strip()
+
+        return queryset.filter(
+            models.Q(city__icontains=val) |
+            models.Q(state__icontains=val) |
+            models.Q(address_line1__icontains=val) |
+            models.Q(address_line2__icontains=val) |
+            models.Q(country__icontains=val) |
+            models.Q(title__icontains=val)
+        )
 
     class Meta:
         model  = Property

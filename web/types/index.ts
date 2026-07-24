@@ -92,6 +92,9 @@ export type Trip = {
 
 export type SearchParams = {
   city?: string
+  userCity?: string
+  nearLat?: number
+  nearLng?: number
   type?: PropertyType
   guests?: number
   priceMin?: number

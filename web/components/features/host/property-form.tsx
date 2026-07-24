@@ -148,6 +148,63 @@ export function PropertyForm({
     }
   }
 
+  const [locSearch, setLocSearch] = useState("")
+  const [locSuggestions, setLocSuggestions] = useState<any[]>([])
+  const [isSearchingLoc, setIsSearchingLoc] = useState(false)
+
+  useEffect(() => {
+    if (!locSearch || locSearch.trim().length < 3) {
+      setLocSuggestions([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingLoc(true)
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locSearch.trim())}&countrycodes=in&addressdetails=1&limit=5`,
+          { headers: { "Accept-Language": "en" } }
+        )
+        if (res.ok) {
+          const data = await res.json()
+          setLocSuggestions(data)
+        }
+      } catch {
+        setLocSuggestions([])
+      } finally {
+        setIsSearchingLoc(false)
+      }
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [locSearch])
+
+  function selectLocationSuggestion(sug: any) {
+    const addr = sug.address || {}
+    const city = addr.city || addr.town || addr.village || addr.suburb || addr.state_district || addr.county || sug.name || ""
+    const state = addr.state || ""
+    const country = addr.country || "India"
+    const postalCode = addr.postcode || ""
+
+    const streetParts = [
+      addr.building || addr.house_number,
+      addr.road || addr.street,
+      addr.suburb || addr.neighbourhood || addr.residential,
+    ].filter(Boolean).join(", ")
+
+    const addressLine1 = streetParts || sug.name || city
+
+    setDraft((prev) => ({
+      ...prev,
+      addressLine1: addressLine1 || prev.addressLine1,
+      city: city || prev.city,
+      state: state || prev.state,
+      country: country || prev.country,
+      postalCode: postalCode || prev.postalCode,
+    }))
+
+    setLocSearch("")
+    setLocSuggestions([])
+  }
+
   return (
     <div className="space-y-10">
       <section aria-labelledby="basics">
@@ -189,6 +246,39 @@ export function PropertyForm({
 
       <section aria-labelledby="location">
         <h2 id="location" className="text-heading-sm font-semibold text-ink-black leading-heading-sm">Location</h2>
+        <p className="mt-1 text-body-sm text-smoke">Search your street or city to auto-fill address details.</p>
+
+        {/* Location Search Autocomplete */}
+        <div className="relative mt-4">
+          <Input
+            value={locSearch}
+            onChange={(e) => setLocSearch(e.target.value)}
+            placeholder="Search address, city, or street (e.g. Noida Sector 62, Gurugram Golf Course Rd...)"
+            className={fieldClass}
+          />
+          {isSearchingLoc && (
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-body-xs font-medium text-primary animate-pulse">
+              Searching map…
+            </span>
+          )}
+
+          {locSuggestions.length > 0 && (
+            <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-border bg-background shadow-xl">
+              {locSuggestions.map((sug, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => selectLocationSuggestion(sug)}
+                  className="flex w-full flex-col text-left px-5 py-3 border-b border-border/50 last:border-0 hover:bg-ash-mist transition-colors"
+                >
+                  <span className="text-body-sm font-semibold text-ink-black">{sug.name}</span>
+                  <span className="text-body-xs text-smoke truncate">{sug.display_name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="address1" className={labelClass}>Address line 1</Label>
@@ -200,11 +290,11 @@ export function PropertyForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="city" className={labelClass}>City</Label>
-            <Input id="city" value={draft.city} onChange={(e) => set("city", e.target.value)} placeholder="Gurugram" className={fieldClass} />
+            <Input id="city" value={draft.city} onChange={(e) => set("city", e.target.value)} placeholder="Gurugram or Noida" className={fieldClass} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="region" className={labelClass}>State</Label>
-            <Input id="region" value={draft.state} onChange={(e) => set("state", e.target.value)} placeholder="Haryana" className={fieldClass} />
+            <Input id="region" value={draft.state} onChange={(e) => set("state", e.target.value)} placeholder="Haryana or Uttar Pradesh" className={fieldClass} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="country" className={labelClass}>Country</Label>

@@ -20,3 +20,10 @@ class IsHostProfileComplete(BasePermission):
         has_bio   = bool(request.user.bio and request.user.bio.strip())
         has_photo = bool(request.user.avatar)
         return has_bio and has_photo
+
+
+class IsAdmin(BasePermission):
+    message = "Only administrative accounts can perform this action."
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and (request.user.is_superuser or request.user.role == "admin")

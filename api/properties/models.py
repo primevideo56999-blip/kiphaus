@@ -46,7 +46,7 @@ class Property(models.Model):
     title           = models.CharField(max_length=200)
     description     = models.TextField()
     property_type   = models.CharField(max_length=20, choices=PropertyType.choices)
-    status          = models.CharField(max_length=10, choices=Status.choices, default=Status.DRAFT)
+    status          = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
 
     # Location
     address_line1   = models.CharField(max_length=255)

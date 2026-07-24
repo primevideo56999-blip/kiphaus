@@ -8,6 +8,7 @@
 // (wishlist/trips) go through `apiFetch` from lib/auth.ts and must be called
 // from Client Components (that's where the access token lives).
 
+import { cache } from "react"
 import { apiFetch, apiFetchForm } from "@/lib/auth"
 import type {
   CancellationPolicy,
@@ -18,6 +19,18 @@ import type {
   Trip,
   VerificationLevel,
 } from "@/types"
+
+// Patch performance.measure to safely ignore negative timestamp errors in Next.js Server Components
+if (typeof performance !== "undefined" && performance.measure) {
+  const originalMeasure = performance.measure.bind(performance)
+  performance.measure = function (measureName: string, startOrOptions?: any, endMark?: string) {
+    try {
+      return originalMeasure(measureName, startOrOptions, endMark)
+    } catch {
+      return undefined as any
+    }
+  }
+}
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -185,8 +198,9 @@ function adaptReview(raw: RawReview) {
 }
 
 async function adaptDetail(raw: RawPropertyDetail): Promise<Property> {
-  const rating = Number(raw.avg_rating)
-  const images = raw.photos.map((p) => p.image).filter((img): img is string => Boolean(img))
+  const rating = Number(raw.avg_rating || 0)
+  const photosList = Array.isArray(raw.photos) ? raw.photos : []
+  const images = photosList.map((p) => p.image).filter((img): img is string => Boolean(img))
 
   let reviews: Property["reviews"] = []
   let reviewBreakdown: Property["reviewBreakdown"] = {
@@ -194,13 +208,10 @@ async function adaptDetail(raw: RawPropertyDetail): Promise<Property> {
   }
   try {
     if (API_URL) {
-      const res = await fetch(`${API_URL}/api/v1/reviews/property/${raw.id}/`, {
-        signal: AbortSignal.timeout(4000),
-      })
+      const res = await fetch(`${API_URL}/api/v1/reviews/property/${raw.id}/`)
       if (res.ok) {
         const data: RawReviewsResponse = await res.json()
         reviews = data.results.map(adaptReview)
-        // backend doesn't track "accuracy"/"checkIn" categories — stand in with the overall average
         reviewBreakdown = {
           cleanliness: data.ratings.avg_cleanliness,
           accuracy: data.ratings.avg_overall,
@@ -212,41 +223,47 @@ async function adaptDetail(raw: RawPropertyDetail): Promise<Property> {
       }
     }
   } catch {
-    // reviews are a progressive enhancement of the detail page — don't fail the page for them
+    // reviews progressive enhancement
   }
+
+  const hostObj = typeof raw.host === "object" && raw.host ? raw.host : null
+  const hostName = hostObj?.full_name || "Host"
+  const hostPhone = hostObj?.phone || ""
+  const hostAvatar = hostObj?.avatar || undefined
+  const amenitiesList = Array.isArray(raw.amenities) ? raw.amenities : []
 
   return {
     id: String(raw.id),
     slug: String(raw.id),
-    title: raw.title,
+    title: raw.title || "Kiphaus Stay",
     propertyType: PROPERTY_TYPE_MAP[raw.property_type] ?? "Homestay",
-    city: raw.city,
-    region: raw.state,
+    city: raw.city || "",
+    region: raw.state || raw.country || "",
     lat: raw.latitude ? Number(raw.latitude) : 0,
     lng: raw.longitude ? Number(raw.longitude) : 0,
-    guests: raw.max_guests,
-    beds: raw.beds,
-    pricePerNight: Number(raw.price_per_night),
+    guests: raw.max_guests || 1,
+    beds: raw.beds || 1,
+    pricePerNight: Number(raw.price_per_night || 0),
     rating,
-    reviewCount: raw.total_reviews,
-    verificationLevel: raw.verification_level,
-    hostName: raw.host.full_name,
-    hostBadge: hostBadgeFor(rating, raw.total_reviews),
+    reviewCount: raw.total_reviews || 0,
+    verificationLevel: raw.verification_level || 1,
+    hostName,
+    hostBadge: hostBadgeFor(rating, raw.total_reviews || 0),
     image: images[0],
     images,
-    description: raw.description,
-    amenities: raw.amenities.map((a) => ({ name: a.name, icon: a.icon, category: a.category })),
+    description: raw.description || "",
+    amenities: amenitiesList.map((a) => ({ name: a.name, icon: a.icon, category: a.category })),
     houseRules: raw.house_rules ? raw.house_rules.split("\n").filter(Boolean) : [],
     cancellationPolicy: CANCELLATION_MAP[raw.cancellation_policy] ?? "Moderate",
-    whatsappNumber: raw.host.phone,
+    whatsappNumber: hostPhone,
     reviewBreakdown,
     reviews,
     host: {
-      name: raw.host.full_name,
-      photo: raw.host.avatar ?? undefined,
+      name: hostName,
+      photo: hostAvatar,
       responseRate: 0,
       avgResponseTimeMinutes: 60,
-      badge: hostBadgeFor(rating, raw.total_reviews),
+      badge: hostBadgeFor(rating, raw.total_reviews || 0),
       otherListingsCount: 0,
     },
   }
@@ -254,7 +271,15 @@ async function adaptDetail(raw: RawPropertyDetail): Promise<Property> {
 
 function searchQueryString(params: SearchParams): string {
   const qs = new URLSearchParams()
-  if (params.city) qs.set("city", params.city)
+  if (params.city) {
+    qs.set("city", params.city)
+    qs.set("search", params.city)
+  }
+  if (params.userCity) qs.set("user_city", params.userCity)
+  if (params.nearLat != null && params.nearLng != null) {
+    qs.set("near_lat", String(params.nearLat))
+    qs.set("near_lng", String(params.nearLng))
+  }
   if (params.guests) qs.set("min_guests", String(params.guests))
   if (params.priceMin != null) qs.set("min_price", String(params.priceMin))
   if (params.priceMax != null) qs.set("max_price", String(params.priceMax))
@@ -275,7 +300,6 @@ export async function fetchProperties(params: SearchParams = {}): Promise<Proper
   try {
     const res = await fetch(`${API_URL}/api/v1/properties/${qs ? `?${qs}` : ""}`, {
       next: { revalidate: 60 },
-      signal: AbortSignal.timeout(4000),
     })
     if (!res.ok) return []
     const data = await res.json()
@@ -287,21 +311,24 @@ export async function fetchProperties(params: SearchParams = {}): Promise<Proper
   }
 }
 
-/** Server-safe (no auth needed). Returns null if the property doesn't exist. */
-export async function fetchPropertyById(id: string): Promise<Property | null> {
+/** Server-safe (no auth needed). Returns null if the property doesn't exist. Deduplicated per request via React cache. */
+export const fetchPropertyById = cache(async function (id: string): Promise<Property | null> {
   if (!API_URL) return null
   try {
     const res = await fetch(`${API_URL}/api/v1/properties/${id}/`, {
       next: { revalidate: 60 },
-      signal: AbortSignal.timeout(4000),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.warn(`fetchPropertyById(${id}) HTTP ${res.status}`)
+      return null
+    }
     const raw: RawPropertyDetail = await res.json()
-    return adaptDetail(raw)
-  } catch {
+    return await adaptDetail(raw)
+  } catch (err) {
+    console.error(`fetchPropertyById(${id}) error:`, err)
     return null
   }
-}
+})
 
 /** Client-only (needs the Bearer token). */
 export async function toggleWishlist(propertyId: string): Promise<boolean> {

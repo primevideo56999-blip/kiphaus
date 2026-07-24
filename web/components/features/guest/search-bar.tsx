@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import type { DateRange } from "react-day-picker"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
@@ -86,6 +86,43 @@ export function SearchBar({ className }: { className?: string }) {
 
   const totalGuests = adults + children
 
+  const [geoSuggestions, setGeoSuggestions] = useState<{ displayName: string; name: string; city: string; lat?: number; lng?: number }[]>([])
+  const [isSearchingGeo, setIsSearchingGeo] = useState(false)
+
+  useEffect(() => {
+    if (!citySearch || citySearch.trim().length < 2) {
+      setGeoSuggestions([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingGeo(true)
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(citySearch.trim())}&countrycodes=in&addressdetails=1&limit=5`, {
+          headers: { "Accept-Language": "en" }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          const suggestions = data.map((item: any) => {
+            const city = item.address?.city || item.address?.town || item.address?.village || item.address?.state_district || item.name || citySearch
+            return {
+              displayName: item.display_name,
+              name: item.name || city,
+              city: city,
+              lat: parseFloat(item.lat),
+              lng: parseFloat(item.lon),
+            }
+          })
+          setGeoSuggestions(suggestions)
+        }
+      } catch {
+        setGeoSuggestions([])
+      } finally {
+        setIsSearchingGeo(false)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [citySearch])
+
   const filteredCities = useMemo(
     () => searchCities.filter((option) => option.toLowerCase().includes(citySearch.toLowerCase())),
     [citySearch]
@@ -162,7 +199,8 @@ export function SearchBar({ className }: { className?: string }) {
   function handleSubmit(event?: FormEvent) {
     if (event) event.preventDefault()
     const params = new URLSearchParams()
-    if (city) params.set("city", city)
+    const selectedCity = (city || citySearch || "").trim()
+    if (selectedCity) params.set("city", selectedCity)
     if (range?.from) params.set("checkin", toDateParam(range.from))
     if (range?.to) params.set("checkout", toDateParam(range.to))
     if (flexDays > 0) params.set("flex", String(flexDays))
@@ -218,7 +256,7 @@ export function SearchBar({ className }: { className?: string }) {
               <MapPin className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />
               <span className="flex min-w-0 flex-col">
                 <span className={FIELD_LABEL_CLASS}>Where</span>
-                <span className={FIELD_VALUE_CLASS}>{city || "Gurugram areas"}</span>
+                <span className={FIELD_VALUE_CLASS}>{city || citySearch || "Search location"}</span>
               </span>
             </PopoverTrigger>
 
@@ -274,15 +312,35 @@ export function SearchBar({ className }: { className?: string }) {
                 )}
 
                 <div>
-                  <h3 className="mb-2 text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                    Destinations
+                  <h3 className="mb-2 text-xs font-bold tracking-wider text-muted-foreground uppercase flex items-center justify-between">
+                    <span>Destinations</span>
+                    {isSearchingGeo && <span className="text-[10px] lowercase text-primary animate-pulse">searching map...</span>}
                   </h3>
                   <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
-                    {filteredCities.length === 0 ? (
-                      <p className="py-4 text-center text-sm text-muted-foreground">
-                        No destinations match &ldquo;{citySearch}&rdquo;
-                      </p>
-                    ) : (
+                    {citySearch && geoSuggestions.length > 0 ? (
+                      geoSuggestions.map((sug, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setCity(sug.city)
+                            setActiveField("when")
+                          }}
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-muted",
+                            city === sug.city && "bg-muted font-semibold text-primary"
+                          )}
+                        >
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <MapPin className="size-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-foreground truncate">{sug.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{sug.displayName}</p>
+                          </div>
+                        </button>
+                      ))
+                    ) : filteredCities.length > 0 ? (
                       filteredCities.map((option) => (
                         <button
                           key={option}
@@ -296,12 +354,16 @@ export function SearchBar({ className }: { className?: string }) {
                             city === option && "bg-muted font-semibold text-primary"
                           )}
                         >
-                          <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground shrink-0">
                             <MapPin className="size-4" />
                           </div>
                           <span className="text-foreground">{option}</span>
                         </button>
                       ))
+                    ) : (
+                      <p className="py-4 text-center text-sm text-muted-foreground">
+                        {isSearchingGeo ? "Searching map..." : `No destinations match "${citySearch}"`}
+                      </p>
                     )}
                   </div>
                 </div>

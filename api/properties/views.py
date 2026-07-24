@@ -65,38 +65,52 @@ class PropertyViewSet(viewsets.ModelViewSet):
             ).values_list("property_id", flat=True)
             qs = qs.exclude(id__in=list(confirmed_blocked) + list(host_blocked))
 
-        # Near-me search: ?near_lat=..&near_lng=.. annotates each property with
-        # its haversine distance (km) and sorts nearest first. ?radius_km=.. optionally
-        # limits results to that radius.
-        near_lat = self.request.query_params.get("near_lat")
-        near_lng = self.request.query_params.get("near_lng")
+        # Location-based ordering: show listings matching user location first, then all other listings
+        user_city = self.request.query_params.get("user_city")
+        near_lat  = self.request.query_params.get("near_lat")
+        near_lng  = self.request.query_params.get("near_lng")
+
         if near_lat and near_lng:
             try:
                 lat, lng = float(near_lat), float(near_lng)
+                if -90 <= lat <= 90 and -180 <= lng <= 180:
+                    from django.db.models import Case, When, Value, IntegerField, FloatField, ExpressionWrapper, F
+                    from django.db.models.functions import ACos, Cos, Sin, Radians, Least, Greatest
+                    cos_angle = (
+                        Sin(Radians(lat)) * Sin(Radians(F("latitude")))
+                        + Cos(Radians(lat)) * Cos(Radians(F("latitude")))
+                        * Cos(Radians(F("longitude")) - Radians(lng))
+                    )
+                    distance = ExpressionWrapper(
+                        6371.0 * ACos(Least(Greatest(cos_angle, -1.0), 1.0)),
+                        output_field=FloatField(),
+                    )
+                    qs = qs.annotate(
+                        has_coords=Case(
+                            When(latitude__isnull=False, longitude__isnull=False, then=Value(1)),
+                            default=Value(0),
+                            output_field=IntegerField(),
+                        ),
+                        distance_km=Case(
+                            When(latitude__isnull=False, longitude__isnull=False, then=distance),
+                            default=Value(999999.0),
+                            output_field=FloatField(),
+                        ),
+                    ).order_by("-has_coords", "distance_km", "-created_at")
             except ValueError:
-                lat = lng = None
-            if lat is not None and -90 <= lat <= 90 and -180 <= lng <= 180:
-                # Haversine, clamped so float rounding can't push acos out of [-1, 1]
-                cos_angle = (
-                    Sin(Radians(lat)) * Sin(Radians(F("latitude")))
-                    + Cos(Radians(lat)) * Cos(Radians(F("latitude")))
-                    * Cos(Radians(F("longitude")) - Radians(lng))
+                pass
+        elif user_city and user_city.strip():
+            from django.db.models import Case, When, Value, IntegerField
+            city_str = user_city.strip()
+            qs = qs.annotate(
+                city_match=Case(
+                    When(city__iexact=city_str, then=Value(1)),
+                    When(city__icontains=city_str, then=Value(1)),
+                    When(state__icontains=city_str, then=Value(1)),
+                    default=Value(0),
+                    output_field=IntegerField(),
                 )
-                distance = ExpressionWrapper(
-                    6371.0 * ACos(Least(Greatest(cos_angle, -1.0), 1.0)),
-                    output_field=FloatField(),
-                )
-                qs = (
-                    qs.filter(latitude__isnull=False, longitude__isnull=False)
-                    .annotate(distance_km=distance)
-                    .order_by("distance_km")
-                )
-                radius = self.request.query_params.get("radius_km")
-                if radius:
-                    try:
-                        qs = qs.filter(distance_km__lte=float(radius))
-                    except ValueError:
-                        pass
+            ).order_by("-city_match", "-created_at")
 
         if not self.request.user.is_authenticated:
             return qs.filter(status=Property.Status.ACTIVE)
@@ -106,20 +120,18 @@ class PropertyViewSet(viewsets.ModelViewSet):
 
     def filter_queryset(self, queryset):
         # OrderingFilter applies the default "-created_at" after get_queryset,
-        # which would clobber the nearest-first sort. Reapply it unless the
-        # client asked for an explicit ordering.
+        # which would clobber location-based sort. Reapply location order unless
+        # the client asked for an explicit ordering parameter.
         qs = super().filter_queryset(queryset)
-        if (
-            self.request.query_params.get("near_lat")
-            and self.request.query_params.get("near_lng")
-            and not self.request.query_params.get("ordering")
-            and "distance_km" in qs.query.annotations
-        ):
-            qs = qs.order_by("distance_km")
+        if not self.request.query_params.get("ordering"):
+            if "distance_km" in qs.query.annotations:
+                qs = qs.order_by("-has_coords", "distance_km", "-created_at")
+            elif "city_match" in qs.query.annotations:
+                qs = qs.order_by("-city_match", "-created_at")
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(host=self.request.user)
+        serializer.save(host=self.request.user, status=Property.Status.ACTIVE)
 
     @action(detail=False, methods=["get"], url_path="mine",
             permission_classes=[permissions.IsAuthenticated])

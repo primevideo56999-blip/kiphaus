@@ -20,13 +20,16 @@ const fieldClass =
 const labelClass = "text-body-sm font-medium text-graphite tracking-body-sm"
 
 export default function GuestAccountPage() {
-  const { user, updateProfile, changePassword, logout } = useAuth()
+  const { user, updateProfile, updateAvatar, changePassword, logout } = useAuth()
   const router = useRouter()
 
   const [name, setName] = useState(user?.full_name ?? "")
   const [phone, setPhone] = useState(user?.phone ?? "")
+  const [bio, setBio] = useState(user?.bio ?? "")
   const [profileStatus, setProfileStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [profileError, setProfileError] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
 
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -39,11 +42,25 @@ export default function GuestAccountPage() {
     setProfileError(null)
     const [first_name, ...rest] = name.trim().split(" ")
     try {
-      await updateProfile({ first_name, last_name: rest.join(" "), phone })
+      await updateProfile({ first_name, last_name: rest.join(" "), phone, bio })
       setProfileStatus("saved")
     } catch (err) {
       setProfileError(err instanceof AuthError ? err.message : "Couldn't save your changes.")
       setProfileStatus("error")
+    }
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarUploading(true)
+    setAvatarError(null)
+    try {
+      await updateAvatar(file)
+    } catch (err) {
+      setAvatarError(err instanceof AuthError ? err.message : "Couldn't upload profile photo.")
+    } finally {
+      setAvatarUploading(false)
     }
   }
 
@@ -67,11 +84,28 @@ export default function GuestAccountPage() {
     router.push("/login")
   }
 
+  const isHost = user?.role === "host"
+  const isProfileIncomplete = isHost && (!user?.bio?.trim() || !user?.avatar)
+
   return (
     <>
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 pt-10 pb-24 sm:px-6 lg:px-8">
         <h1 className="font-perfectly-nineties-regular text-heading text-ink-black leading-heading">Account</h1>
+
+        {isProfileIncomplete && (
+          <div className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-left flex items-start gap-4">
+            <div className="size-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 font-bold text-amber-700">
+              !
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-body font-semibold text-ink-black">Complete Your Host Profile</h3>
+              <p className="text-body-sm text-smoke">
+                To manage and publish property listings, hosts are required to upload a **Profile Photo** and write a brief **Bio (About you)** below.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="mt-8 flex flex-col gap-10 md:flex-row">
           <AccountNav />
@@ -80,11 +114,41 @@ export default function GuestAccountPage() {
             <FadeIn inView={false} delay={0}>
               <section aria-labelledby="personal-info">
                 <h2 id="personal-info" className="text-heading-sm font-semibold text-ink-black leading-heading-sm">
-                  Personal info
+                  Personal info & Profile
                 </h2>
                 <p className="mt-1 text-body-sm text-smoke tracking-body-sm">
-                  Kiphaus keeps this on file to verify it&rsquo;s really you when contacting a host.
+                  Update your profile photo, contact details, and host bio.
                 </p>
+
+                {/* Profile Photo Upload */}
+                <div className="mt-6 flex items-center gap-5 p-4 rounded-2xl border border-border bg-ash-mist/30">
+                  <div className="relative size-16 rounded-full overflow-hidden bg-ash-mist border border-border shrink-0">
+                    {user?.avatar ? (
+                      /* eslint-disable-next-next/no-img-element */
+                      <img src={user.avatar} alt={user.full_name} className="size-full object-cover" />
+                    ) : (
+                      <div className="size-full flex items-center justify-center font-bold text-lg text-graphite">
+                        {user?.full_name?.[0]?.toUpperCase() ?? "U"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1.5 flex-1">
+                    <Label htmlFor="avatar-upload" className="text-body-sm font-semibold text-ink-black cursor-pointer hover:underline">
+                      {avatarUploading ? "Uploading photo…" : "Upload Profile Photo"}
+                    </Label>
+                    <p className="text-body-xs text-smoke">JPG, PNG, or WebP. Max 5MB.</p>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      disabled={avatarUploading}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+                {avatarError && <p className="mt-2 text-body-sm text-destructive tracking-body-sm">{avatarError}</p>}
+
                 <form className="mt-6 grid gap-5 sm:grid-cols-2" onSubmit={handleProfileSubmit}>
                   <div className="space-y-2">
                     <Label htmlFor="name" className={labelClass}>Full name</Label>
@@ -98,8 +162,19 @@ export default function GuestAccountPage() {
                     <Label htmlFor="email" className={labelClass}>Email</Label>
                     <Input id="email" type="email" value={user?.email ?? ""} disabled className={fieldClass} />
                   </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="bio" className={labelClass}>Bio / About You {isHost && <span className="text-destructive">* (Required for hosts)</span>}</Label>
+                    <textarea
+                      id="bio"
+                      rows={3}
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Tell guests about yourself, your hospitality background, and your homestays..."
+                      className="w-full rounded-2xl p-4 bg-transparent border border-border hover:border-graphite/50 transition-colors text-body text-ink-black focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
                   {profileError && <p className="text-body-sm text-destructive tracking-body-sm sm:col-span-2">{profileError}</p>}
-                  {profileStatus === "saved" && <p className="text-body-sm text-primary tracking-body-sm sm:col-span-2">Saved.</p>}
+                  {profileStatus === "saved" && <p className="text-body-sm text-primary tracking-body-sm sm:col-span-2">Profile updated successfully.</p>}
                   <div className="sm:col-span-2">
                     <Button type="submit" disabled={profileStatus === "saving"} className="rounded-full h-[50px] px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                       {profileStatus === "saving" ? "Saving…" : "Save changes"}

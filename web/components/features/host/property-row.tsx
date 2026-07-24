@@ -31,9 +31,8 @@ export function PropertyRow({
   onUnpublish: (id: string) => void
   isMutating: boolean
 }) {
-  // Level 2 = property verification — publishing needs it approved, same rule the
-  // backend's PropertyViewSet.publish action enforces server-side.
-  const propertyLevelApproved = listing.verificationLevel >= 2
+  // Verification check skipped — hosts can publish properties without level verification
+  const propertyLevelApproved = true
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-border p-4 sm:flex-row sm:items-center">
@@ -60,19 +59,13 @@ export function PropertyRow({
           <span className="flex items-center gap-1"><Star className="size-3.5" /> {listing.avgRating.toFixed(2)} ({listing.totalReviews})</span>
           <span className="flex items-center gap-1"><CalendarCheck className="size-3.5" /> {listing.totalBookings} bookings</span>
         </div>
-        {listing.status === "draft" && !propertyLevelApproved && (
-          <p className="mt-2 text-body-sm text-destructive tracking-body-sm">
-            Complete Level 2 verification to make this property visible to guests.
-          </p>
-        )}
       </div>
 
       <div className="flex w-full shrink-0 gap-2 sm:w-auto">
         {(listing.status === "draft" || listing.status === "paused") && (
           <Button
             className="flex-1 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground sm:flex-none"
-            disabled={!propertyLevelApproved || isMutating}
-            title={!propertyLevelApproved ? "Complete Level 2 verification to make this property visible to guests." : undefined}
+            disabled={isMutating}
             onClick={() => onPublish(listing.id)}
           >
             Publish

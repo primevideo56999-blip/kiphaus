@@ -2,10 +2,8 @@ import { SiteHeader } from "@/components/layout/header"
 import { SiteFooter } from "@/components/layout/footer"
 import { SearchBar } from "@/components/features/guest/search-bar"
 import { SearchFilters } from "@/components/features/guest/search-filters"
-import { PropertyCard } from "@/components/features/guest/property-card"
-import { EmptyState } from "@/components/features/guest/empty-state"
+import { PropertySearchClient } from "@/components/features/guest/property-search-client"
 import { FadeIn } from "@/components/motion/fade-in"
-import { StaggerList, StaggerItem } from "@/components/motion/stagger-list"
 import { fetchProperties } from "@/lib/api"
 import type { PropertyType, SearchParams, VerificationLevel } from "@/types"
 
@@ -43,26 +41,8 @@ export default async function SearchPage({
         </FadeIn>
         <div className="flex flex-col gap-10 md:flex-row">
           <SearchFilters />
-          <div className="flex-1">
-            {results.length === 0 ? (
-              <FadeIn inView={false}>
-                <EmptyState city={params.city} />
-              </FadeIn>
-            ) : (
-              <>
-                <p className="mb-6 text-sm font-medium text-foreground">
-                  {results.length} {results.length === 1 ? "stay" : "stays"}
-                  {params.city ? ` in ${params.city}` : ""}
-                </p>
-                <StaggerList inView={false} className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {results.map((property) => (
-                    <StaggerItem key={property.id}>
-                      <PropertyCard property={property} />
-                    </StaggerItem>
-                  ))}
-                </StaggerList>
-              </>
-            )}
+          <div className="flex-1 min-w-0">
+            <PropertySearchClient results={results} city={params.city} />
           </div>
         </div>
       </main>

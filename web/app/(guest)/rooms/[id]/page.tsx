@@ -11,8 +11,8 @@ import { AmenitiesModal } from "@/components/features/guest/amenities-modal"
 import { PropertyCard } from "@/components/features/guest/property-card"
 import { getAmenityIcon } from "@/lib/amenity-icons"
 import { BookingCalendar } from "@/components/features/guest/booking-calendar"
-import { PropertyMap } from "@/components/features/guest/property-map"
 import { Button } from "@/components/ui/button"
+import { RoomMap } from "@/components/features/guest/room-map"
 import { fetchProperties, fetchPropertyById } from "@/lib/api"
 import { Separator } from "@/components/ui/separator"
 import { HostCard } from "@/components/features/guest/host-card"
@@ -235,7 +235,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         <div className="mt-12 pt-12 border-t border-border">
           <h2 className="text-[22px] font-semibold text-ink-black mb-6">Where you&rsquo;ll be</h2>
           <p className="mb-6 text-ink-black">{property.city}, {property.region}, India</p>
-          <PropertyMap lat={property.lat} lng={property.lng} label={`${property.city}, ${property.region}`} />
+          <RoomMap lat={property.lat} lng={property.lng} label={`${property.city}, ${property.region}`} />
           <p className="mt-6 text-ink-black font-semibold">Exact location provided after booking.</p>
         </div>
 

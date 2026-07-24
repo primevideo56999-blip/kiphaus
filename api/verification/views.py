@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from users.permissions import IsHost
+from users.permissions import IsHost, IsAdmin
 from .models import HostVerification
 from .serializers import HostVerificationStepSerializer, VerificationSubmitSerializer
 
@@ -58,5 +58,47 @@ class VerificationSubmitView(APIView):
         step.reviewed_at = None
         step.reviewed_by = None
         step.save(update_fields=["status", "detail", "submitted_at", "reviewed_at", "reviewed_by"])
+
+        return Response(HostVerificationStepSerializer(step).data, status=status.HTTP_200_OK)
+
+
+class AdminVerificationListView(APIView):
+    """List verification steps for admin review."""
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        status_filter = request.query_params.get("status", HostVerification.Status.IN_REVIEW)
+        qs = HostVerification.objects.all()
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return Response(HostVerificationStepSerializer(qs, many=True).data)
+
+
+class AdminVerificationReviewView(APIView):
+    """Approve or reject a host verification step as admin."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        step_id = request.data.get("step_id")
+        action = request.data.get("action")  # "approve" or "reject"
+        if not step_id or action not in ("approve", "reject"):
+            return Response(
+                {"detail": "step_id and valid action ('approve' or 'reject') are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            step = HostVerification.objects.get(pk=step_id)
+        except HostVerification.DoesNotExist:
+            return Response({"detail": "Verification step not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if action == "approve":
+            step.status = HostVerification.Status.APPROVED
+        else:
+            step.status = HostVerification.Status.REJECTED
+
+        step.reviewed_at = timezone.now()
+        step.reviewed_by = request.user
+        step.save(update_fields=["status", "reviewed_at", "reviewed_by"])
 
         return Response(HostVerificationStepSerializer(step).data, status=status.HTTP_200_OK)
