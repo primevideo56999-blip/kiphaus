@@ -143,19 +143,18 @@ SIMPLE_JWT = {
 }
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-# Wildcard + credentials would defeat CORS entirely for a cookie-authenticated
-# API — list real origins explicitly.
-# _cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
-# CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
 CORS_ALLOW_CREDENTIALS = True
 
-# CORS_ALLOWED_ORIGINS = [
-#     "https://kiphaus-frontend.onrender.com",
-#     "http://localhost:5173",
-#     "https://kiphaus.vercel.app",
-# ]
-
-CORS_ALLOW_ALL_ORIGINS = True
+_cors_origins_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+if _cors_origins_env:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_env.split(",") if o.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "https://kiphaus-frontend.onrender.com",
+        "https://kiphaus.com",
+        "https://www.kiphaus.com",
+        "http://localhost:3000",
+    ]
 
 CORS_URLS_REGEX = r"^/api/.*$"
 
