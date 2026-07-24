@@ -18,17 +18,27 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [verificationUrl, setVerificationUrl] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function onSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+    setVerificationUrl(null)
     setIsSubmitting(true)
     try {
       const user = await login(email, password)
       router.push(user.role === "host" ? "/host/dashboard" : "/")
     } catch (err) {
-      setError(err instanceof AuthError ? err.message : "Something went wrong. Please try again.")
+      if (err instanceof AuthError) {
+        setError(err.message)
+        const url = (err.body as Record<string, unknown> | null)?.verification_url
+        if (typeof url === "string") {
+          setVerificationUrl(url)
+        }
+      } else {
+        setError("Something went wrong. Please try again.")
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -47,7 +57,17 @@ export default function LoginPage() {
         <StaggerList className="space-y-5" inView={false}>
           {error && (
             <StaggerItem>
-              <p role="alert" className="text-body-sm text-destructive text-center">{error}</p>
+              <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-center space-y-2">
+                <p role="alert" className="text-body-sm font-medium text-destructive">{error}</p>
+                {verificationUrl && (
+                  <div className="pt-2 text-body-sm font-semibold text-ink-black border-t border-destructive/10">
+                    <p className="text-smoke text-body-sm font-normal">For testing purpose:</p>
+                    <a href={verificationUrl} className="text-primary hover:underline break-all font-bold">
+                      {verificationUrl}
+                    </a>
+                  </div>
+                )}
+              </div>
             </StaggerItem>
           )}
           <StaggerItem>

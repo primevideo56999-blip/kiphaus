@@ -37,7 +37,7 @@ export default function SignupPage() {
 
     setIsSubmitting(true)
     try {
-      await register({
+      const res = await register({
         email,
         username: email,
         password1: password,
@@ -45,7 +45,11 @@ export default function SignupPage() {
         first_name: name,
         role,
       })
-      router.push("/verify")
+      if (res.verification_url) {
+        router.push(`/verify?link=${encodeURIComponent(res.verification_url)}`)
+      } else {
+        router.push("/verify")
+      }
     } catch (err) {
       setError(err instanceof AuthError ? err.message : "Something went wrong. Please try again.")
     } finally {

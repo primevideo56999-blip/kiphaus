@@ -32,6 +32,8 @@ REFRESH_COOKIE_NAME = "kh_refresh"
 
 
 def _send_verification_email(user):
+    if user.email_verified:
+        return None
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = email_verification_token.make_token(user)
     frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
@@ -42,8 +44,7 @@ def _send_verification_email(user):
         text=f"Confirm your email address: {link}\n\nIf you didn't create a Kiphaus account, you can ignore this email.",
         idempotency_key=f"verify-email/{user.pk}/{token}",
     )
-
-
+    return link
 
 
 def _cookie_domain():
@@ -51,11 +52,6 @@ def _cookie_domain():
 
 
 def _set_refresh_cookie(response, refresh_token: str):
-    # Frontend and API are on different hostnames in production (separate Render
-    # services, no shared parent domain) — a cross-site fetch() only carries this
-    # cookie if SameSite=None, which itself requires Secure. Locally both run on
-    # "localhost" (same-site, different port only), so Lax is fine there and lets
-    # the cookie work over plain http in dev (Secure is false when DEBUG=True).
     response.set_cookie(
         REFRESH_COOKIE_NAME,
         str(refresh_token),
@@ -77,9 +73,10 @@ class CustomTokenSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         if not self.user.email_verified:
-            _send_verification_email(self.user)
+            link = _send_verification_email(self.user)
             raise serializers.ValidationError({
-                "detail": "Your email address is not verified. A new verification link has been sent to your email. Please check your inbox or logs."
+                "detail": "Your email address is not verified.",
+                "verification_url": link,
             })
         data["user"] = UserSerializer(self.user).data
         return data
@@ -111,13 +108,14 @@ class RegisterView(generics.CreateAPIView):
         try:
             user = serializer.save()
             send_welcome_email(user)
-            _send_verification_email(user)
+            link = _send_verification_email(user)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({
-            "user":   UserSerializer(user).data,
-            "detail": "Account created. Please check your email to verify your account before logging in.",
+            "user":             UserSerializer(user).data,
+            "detail":           "Account created. Please check your email to verify your account before logging in.",
+            "verification_url": link,
         }, status=status.HTTP_201_CREATED)
 
 
@@ -137,10 +135,14 @@ class VerifyEmailResendView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        link = None
         if user and not user.email_verified:
-            _send_verification_email(user)
+            link = _send_verification_email(user)
 
-        return Response({"detail": "If your email isn't verified yet, a new link has been sent."})
+        return Response({
+            "detail":           "A new verification link has been generated." if link else "User is already verified.",
+            "verification_url": link,
+        })
 
 
 class VerifyEmailConfirmView(APIView):

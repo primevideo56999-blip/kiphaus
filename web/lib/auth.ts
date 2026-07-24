@@ -24,12 +24,14 @@ export interface AuthUser {
 
 export class AuthError extends Error {
   status: number
-  errors: Record<string, string[]> | null
+  errors: Record<string, any> | null
+  body: Record<string, any> | null
 
-  constructor(status: number, message: string, errors: Record<string, string[]> | null = null) {
+  constructor(status: number, message: string, body: Record<string, any> | null = null) {
     super(message)
     this.status = status
-    this.errors = errors
+    this.errors = body
+    this.body = body
   }
 }
 
@@ -164,7 +166,7 @@ export async function register(input: {
   username: string
   first_name?: string
   role?: "guest" | "host"
-}): Promise<AuthUser> {
+}): Promise<{ user: AuthUser; verification_url?: string }> {
   const data = await apiFetch("/api/v1/auth/register/", {
     method: "POST",
     body: JSON.stringify({
@@ -179,7 +181,7 @@ export async function register(input: {
   if (data.access) {
     setAccessToken(data.access)
   }
-  return data.user as AuthUser
+  return { user: data.user as AuthUser, verification_url: data.verification_url }
 }
 
 export async function loginWithGoogle(idToken: string): Promise<AuthUser> {
@@ -283,7 +285,7 @@ export function confirmPasswordReset(input: {
 }
 
 /** Resends email verification link to current user session or specified email address. */
-export function resendVerificationEmail(email?: string): Promise<{ detail: string }> {
+export function resendVerificationEmail(email?: string): Promise<{ detail: string; verification_url?: string }> {
   return apiFetch("/api/v1/auth/verify-email/resend/", {
     method: "POST",
     body: JSON.stringify(email ? { email } : {}),

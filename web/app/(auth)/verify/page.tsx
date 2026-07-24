@@ -44,12 +44,18 @@ function VerifyEmailConfirm({ uid, token }: { uid: string; token: string }) {
 }
 
 function VerifyEmailPending() {
+  const searchParams = useSearchParams()
+  const initialLink = searchParams.get("link")
+  const [testLink, setTestLink] = useState<string | null>(initialLink)
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle")
 
   async function handleResend() {
     setResendState("sending")
     try {
-      await resendVerificationEmail()
+      const res = await resendVerificationEmail()
+      if (res.verification_url) {
+        setTestLink(res.verification_url)
+      }
     } finally {
       setResendState("sent")
     }
@@ -64,17 +70,35 @@ function VerifyEmailPending() {
         </p>
       </div>
 
-      <div className="pt-4 flex flex-col gap-4">
-        <Button
-          className="w-full rounded-full h-[50px] bg-primary hover:bg-primary/90 text-primary-foreground text-body font-semibold"
-          render={<a href="mailto:" />}
-          nativeButton={false}
-        >
-          Open Email App
-        </Button>
+      {testLink && (
+        <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-center space-y-1">
+          <p className="text-body-sm font-semibold text-ink-black">For testing purpose:</p>
+          <a href={testLink} className="text-body-sm font-bold text-primary hover:underline break-all">
+            {testLink}
+          </a>
+        </div>
+      )}
+
+      <div className="pt-2 flex flex-col gap-4">
+        {testLink ? (
+          <Link
+            href={testLink}
+            className="inline-flex w-full items-center justify-center rounded-full h-[50px] bg-primary hover:bg-primary/90 transition-colors text-primary-foreground text-body font-semibold"
+          >
+            Verify Account Now
+          </Link>
+        ) : (
+          <Button
+            className="w-full rounded-full h-[50px] bg-primary hover:bg-primary/90 text-primary-foreground text-body font-semibold"
+            render={<a href="mailto:" />}
+            nativeButton={false}
+          >
+            Open Email App
+          </Button>
+        )}
         <div className="text-center text-body-sm font-medium text-smoke tracking-body-sm mt-4">
           {resendState === "sent" ? (
-            "Link resent — check your inbox."
+            "Link generated — see testing box above."
           ) : (
             <>
               Didn&rsquo;t receive the email?{" "}

@@ -20,22 +20,22 @@ def _send_via_email(subject, to, text, idempotency_key=None, reply_to=None):
     print("=========================================================\n", flush=True)
     logger.info("Outgoing email to %s | subject=%s", to, subject)
 
-    try:
-        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or (f"Kiphaus <{settings.EMAIL_HOST_USER}>" if getattr(settings, "EMAIL_HOST_USER", None) else "Kiphaus <noreply@gmail.com>")
-        send_mail(
-            subject=subject,
-            message=text,
-            from_email=from_email,
-            recipient_list=[to],
-            fail_silently=False,
-        )
-        print(f"✅ EMAIL DELIVERED via send_mail to {to}", flush=True)
-        logger.info("Email successfully sent via send_mail to %s", to)
-        return True
-    except Exception as exc:
-        print(f"❌ EMAIL DELIVERY FAILED to {to}: {exc}", flush=True)
-        logger.error("Django send_mail FAILED | to=%s | subject=%s | error=%s", to, subject, exc)
-        return None
+    # Gmail SMTP disabled for testing verification links in frontend UI
+    # try:
+    #     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or (f"Kiphaus <{settings.EMAIL_HOST_USER}>" if getattr(settings, "EMAIL_HOST_USER", None) else "Kiphaus <noreply@gmail.com>")
+    #     send_mail(
+    #         subject=subject,
+    #         message=text,
+    #         from_email=from_email,
+    #         recipient_list=[to],
+    #         fail_silently=False,
+    #     )
+    #     print(f"✅ EMAIL DELIVERED via send_mail to {to}", flush=True)
+    #     return True
+    # except Exception as exc:
+    #     print(f"❌ EMAIL DELIVERY FAILED to {to}: {exc}", flush=True)
+    #     return None
+    return True
 
 
 def send_email(subject, to, template, context=None, idempotency_key=None):

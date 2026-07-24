@@ -23,7 +23,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<AuthUser>
   loginWithGoogle: (idToken: string) => Promise<AuthUser>
   loginWithApple: (idToken: string) => Promise<AuthUser>
-  register: (input: Parameters<typeof apiRegister>[0]) => Promise<AuthUser>
+  register: (input: Parameters<typeof apiRegister>[0]) => Promise<{ user: AuthUser; verification_url?: string }>
   becomeHost: (input?: Parameters<typeof apiBecomeHost>[0]) => Promise<AuthUser>
   updateProfile: (input: Parameters<typeof apiUpdateProfile>[0]) => Promise<AuthUser>
   updateAvatar: (file: File) => Promise<AuthUser>
@@ -76,9 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const register = React.useCallback(async (input: Parameters<typeof apiRegister>[0]) => {
-    const registeredUser = await apiRegister(input)
-    setUser(registeredUser)
-    return registeredUser
+    const res = await apiRegister(input)
+    if (res.user && res.user.email_verified) {
+      setUser(res.user)
+    }
+    return res
   }, [])
 
   const becomeHost = React.useCallback(async (input?: Parameters<typeof apiBecomeHost>[0]) => {
